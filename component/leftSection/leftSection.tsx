@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 const LeftSection = () => {
   const pathname = usePathname();
-  const isActive = (path) => pathname === path;
+  const isActive = (path:string) => pathname === path;
   return (
     <div className=" w-full h-full  bg-[#161618] border-r border-gray-600">
       <div>

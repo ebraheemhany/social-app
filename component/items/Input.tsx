@@ -1,25 +1,29 @@
 "use client";
 
-import { FieldError, UseFormRegister } from "react-hook-form";
-import { FormData } from "@/Schema/Schema";
+import {
+  FieldError,
+  UseFormRegister,
+  FieldValues,
+  Path,
+} from "react-hook-form";
 
-type InputProps = {
-  name: keyof FormData;
+type InputProps<T extends FieldValues> = {
+  name: Path<T>;
   type?: string;
   placeholder: string;
   icon: React.ReactNode;
-  register: UseFormRegister<FormData>;
+  register: UseFormRegister<T>;
   error?: FieldError;
 };
 
-const Input = ({
+const Input = <T extends FieldValues>({
   name,
   type = "text",
   placeholder,
   icon,
   register,
   error,
-}: InputProps) => {
+}: InputProps<T>) => {
   return (
     <div>
       <div className="w-[95%] mx-auto bg-[#292C35] rounded-lg flex items-center gap-2 text-gray-100 p-3">
@@ -31,7 +35,6 @@ const Input = ({
           placeholder={placeholder}
         />
       </div>
-
       {error && (
         <p className="text-red-400 text-[11px] ml-3">{error.message}</p>
       )}
