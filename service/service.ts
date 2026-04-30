@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase"
-import { Notification } from "@/typing/type";
+import { AppNotification } from "@/typing/type";
 
 // get post by id
 export const getPostById = async (id: string) => {
@@ -314,7 +314,7 @@ const NOTIFICATIONS_PER_PAGE = 20
 export const getNotifications = async (
   userId: string,
   page: number = 0
-): Promise<Notification[]> => {
+): Promise<AppNotification[]> => {
   const from = page * NOTIFICATIONS_PER_PAGE
   const to = from + NOTIFICATIONS_PER_PAGE - 1
 

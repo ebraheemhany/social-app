@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { getNotifications } from '@/service/service'
-import type { NotificationTyping } from '@/typing/type';
+import type { AppNotification } from '@/typing/type';
 
 export function useNotifications(userId: string) {
-  const [notifications, setNotifications] = useState<NotificationTyping[]>([])
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -47,7 +47,7 @@ export function useNotifications(userId: string) {
           filter: `receiver_id=eq.${userId}`,
         },
         (payload) => {
-          const newNotif = payload.new as NotificationTyping
+          const newNotif = payload.new as AppNotification
           setNotifications(prev => [newNotif, ...prev])
           setUnreadCount(prev => prev + 1)
         }
