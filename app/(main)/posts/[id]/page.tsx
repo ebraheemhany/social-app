@@ -12,27 +12,6 @@ export default function PostPage() {
   const { id } = useParams<{ id: string }>();
 
   const { data: post, isLoading, error } = useGetPost(id);
-  // useEffect(() => {
-  //   const getPost = async () => {
-  //     const { data } = await supabase
-  //       .from("posts")
-  //       .select(
-  //         `
-  //         *,
-  //         profiles (
-  //           username,
-  //           avatar_url
-  //         )
-  //       `,
-  //       )
-  //       .eq("id", id)
-  //       .single();
-
-  //     setPost(data);
-  //   };
-
-  //   getPost();
-  // }, [id]);
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Error loading post</p>;
@@ -50,7 +29,7 @@ export default function PostPage() {
           </div>
 
           {/* main section */}
-          <div className="w-[100%] md:w-[70%] lg:w-[60%] mt-22 md:mt-10">
+          <div className="w-[100%] md:w-[70%] lg:w-[60%] mt-22 md:mt-10 mb-20 md:mb-0">
             <CommentSection post={post} />
           </div>
 

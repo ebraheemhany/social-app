@@ -63,14 +63,14 @@ export const SuggestedUserCard = ({ user }: { user: User }) => {
       <button
         onClick={handleFollow}
         disabled={toggleFollow.isPending || followLoading}
-        className={`border rounded-2xl text-center w-[50px] py-1 cursor-pointer text-[12px] ${
+        className={`border rounded-2xl text-center w-[70px] py-1 cursor-pointer text-[12px] ${
           followData?.isFollowing
             ? "bg-blue-700 text-white"
             : "border-blue-700 text-blue-700"
         }`}
       >
         {toggleFollow.isPending
-          ? "..."
+          ? "Foll.."
           : followData?.isFollowing
             ? "Following"
             : "Follow"}

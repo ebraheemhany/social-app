@@ -5,12 +5,12 @@ import Image from "next/image";
 import LeftSection from "@/component/leftSection/leftSection";
 import RighteSection from "@/component/righteSection/righteSection";
 import { useNotifications } from "@/Query/useNotification";
-
+import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import type { NotificationTyping } from "@/typing/type";
 import { useGetCurrentUser } from "@/Query/useGetUserByid";
+import { X } from "lucide-react";
 
-// ✅ بدل الـ static data
 const tabs = [
   { key: "all", label: "all" },
   { key: "like", label: "likes" },
@@ -36,11 +36,10 @@ const getMessage = (type: string, username: string) => {
 
 export default function NotificationsPage() {
   const [tab, setTab] = useState("all");
-  const { data } = useGetCurrentUser(); // ← الـ current user
+  const { data } = useGetCurrentUser();
 
-  console.log(data?.profile);
+  const userId = data?.profile.id ?? "";
 
-  // ✅ بدل notificationsData الـ static
   const {
     notifications,
     unreadCount,
@@ -48,11 +47,27 @@ export default function NotificationsPage() {
     hasMore,
     loadMore,
     markAllAsRead,
-  } = useNotifications(data?.profile.id ?? "");
+    removeNotification, // ✅ من الـ hook مباشرة
+  } = useNotifications(userId);
 
-  // ✅ فلتر بالـ tab
   const filtered: NotificationTyping[] =
     tab === "all" ? notifications : notifications.filter((n) => n.type === tab);
+
+  const router = useRouter();
+  const handleNotificationClick = (notif: any) => {
+    switch (notif.type) {
+      case "like":
+      case "comment":
+        if (notif.post_id) router.push(`/posts/${notif.post_id}`);
+        break;
+      case "follow":
+        if (notif.sender_id) router.push(`/OuherProfile/${notif.sender_id}`);
+        break;
+      case "message":
+        if (notif.chat_id) router.push(`/Messages?conv=${notif.chat_id}`);
+        break;
+    }
+  };
 
   return (
     <div className="w-full flex justify-center">
@@ -74,7 +89,6 @@ export default function NotificationsPage() {
                   <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                       Notifications
-                      {/* ✅ Badge الإشعارات الجديدة */}
                       {unreadCount > 0 && (
                         <span className="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
                           {unreadCount}
@@ -93,7 +107,6 @@ export default function NotificationsPage() {
                     <span className="bg-[#1b1b1f] px-3 py-2 rounded-full capitalize">
                       {tabs.find((item) => item.key === tab)?.label}
                     </span>
-                    {/* ✅ زر Mark all as read */}
                     {unreadCount > 0 && (
                       <button
                         onClick={markAllAsRead}
@@ -122,7 +135,7 @@ export default function NotificationsPage() {
                   ))}
                 </div>
 
-                {/* ✅ Loading skeleton */}
+                {/* Loading skeleton */}
                 {loading && notifications.length === 0 && (
                   <div className="flex flex-col gap-3">
                     {[...Array(3)].map((_, i) => (
@@ -153,7 +166,8 @@ export default function NotificationsPage() {
                           } hover:bg-[#1c1c1f]`}
                         >
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-3">
+                            {/* ✅ w-full على الـ parent */}
+                            <div className="flex items-center gap-3 w-full">
                               {/* Avatar */}
                               <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-700 shrink-0">
                                 {notif.sender?.avatar_url ? (
@@ -164,30 +178,38 @@ export default function NotificationsPage() {
                                     className="object-cover"
                                   />
                                 ) : (
-                                  // ✅ fallback لو مفيش avatar
                                   <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg bg-blue-600">
                                     {notif.sender?.username?.[0]?.toUpperCase()}
                                   </div>
                                 )}
                               </div>
 
-                              {/* Message + Time */}
-                              <div>
-                                <p className="text-sm text-gray-100">
-                                  {getMessage(
-                                    notif.type,
-                                    notif.sender?.username ?? "Someone",
-                                  )}
-                                </p>
-                                {/* ✅ وقت حقيقي من الـ DB */}
-                                <span className="text-xs text-gray-500">
-                                  {formatDistanceToNow(
-                                    new Date(notif.created_at),
-                                    {
-                                      addSuffix: true,
-                                    },
-                                  )}
-                                </span>
+                              {/* Message + Time + X */}
+                              <div className="w-full flex justify-between items-center">
+                                <div
+                                  className="cursor-pointer"
+                                  onClick={() => handleNotificationClick(notif)}
+                                >
+                                  <p className="text-sm text-gray-100">
+                                    {getMessage(
+                                      notif.type,
+                                      notif.sender?.username ?? "Someone",
+                                    )}
+                                  </p>
+                                  <span className="text-xs text-gray-500">
+                                    {formatDistanceToNow(
+                                      new Date(notif.created_at),
+                                      { addSuffix: true },
+                                    )}
+                                  </span>
+                                </div>
+
+                                {/* ✅ shrink-0 عشان متنضغطش */}
+                                <X
+                                  onClick={() => removeNotification(notif.id)}
+                                  size={20}
+                                  className="cursor-pointer hover:text-red-500 shrink-0"
+                                />
                               </div>
                             </div>
 
@@ -196,17 +218,11 @@ export default function NotificationsPage() {
                                 Follow
                               </button>
                             )}
-
-                            {/* ✅ Dot للغير مقروءة */}
-                            {!notif.is_read && (
-                              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-                            )}
                           </div>
                         </div>
                       ))
                     )}
 
-                    {/* ✅ Load More */}
                     {hasMore && (
                       <button
                         onClick={loadMore}

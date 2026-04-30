@@ -16,14 +16,25 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useGetCurrentUser } from "@/Query/useGetUserByid";
+import { useNotifications } from "@/Query/useNotification";
+
 const LeftSection = () => {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
 
   // getUser by id
   const { data: user } = useGetCurrentUser();
+  const { data } = useGetCurrentUser();
 
-  console.log("user => ", user);
+  const userId = data?.profile.id ?? "";
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    hasMore,
+    loadMore,
+    markAllAsRead,
+  } = useNotifications(userId);
 
   return (
     <div className=" w-full h-full  bg-[#161618] border-r border-gray-600">
@@ -36,7 +47,7 @@ const LeftSection = () => {
 
         <div className="w-full h-[1px] bg-gray-600 mt-2"></div>
 
-        <div className="">
+        {/* <div className="">
           <input
             type="search"
             placeholder="Search..."
@@ -49,7 +60,7 @@ const LeftSection = () => {
             rounded-lg
             outline-none px-3 py-1"
           />
-        </div>
+        </div> */}
 
         <div className="mt-8 ml-3">
           <p className="text-[13px] text-gray-700">MAIN</p>
@@ -85,7 +96,7 @@ const LeftSection = () => {
                 </div>
                 <div>
                   <span className="bg-blue-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    3
+                    {unreadCount}
                   </span>
                 </div>
               </li>
@@ -106,10 +117,11 @@ const LeftSection = () => {
                 </div>
               </li>
             </Link>
-            <li className="flex items-center gap-2 py-2 cursor-pointer">
+
+            {/* <li className="flex items-center gap-2 py-2 cursor-pointer">
               <Bookmark className="w-5 h-5" />
               <p>Saved</p>
-            </li>
+            </li> */}
           </ul>
         </div>
         <div className="w-[90%] h-px mx-auto bg-gray-700 mt-2"></div>

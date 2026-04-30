@@ -1,4 +1,3 @@
-// hooks/useNotifications.ts
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { getNotifications } from '@/service/service'
@@ -9,7 +8,7 @@ export function useNotifications(userId: string) {
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
-  const [unreadCount, setUnreadCount] = useState(0) // ✅ عداد الجديد
+  const [unreadCount, setUnreadCount] = useState(0)
 
   const fetchNotifications = useCallback(async (pageNum: number) => {
     if (!userId) return
@@ -20,7 +19,7 @@ export function useNotifications(userId: string) {
       
       if (pageNum === 0) {
         setNotifications(data)
-        setUnreadCount(data.filter(n => !n.is_read).length) // ✅ احسب الغير مقروءة
+        setUnreadCount(data.filter(n => !n.is_read).length)
       } else {
         setNotifications(prev => [...prev, ...data])
       }
@@ -33,7 +32,7 @@ export function useNotifications(userId: string) {
     }
   }, [userId])
 
-  // ✅ Real-time — استنى أي notification جديدة
+  // Real-time — INSERT فقط
   useEffect(() => {
     if (!userId) return
 
@@ -49,14 +48,14 @@ export function useNotifications(userId: string) {
         },
         (payload) => {
           const newNotif = payload.new as NotificationTyping
-          setNotifications(prev => [newNotif, ...prev]) // ✅ أضفه فوق الليست
-          setUnreadCount(prev => prev + 1)              // ✅ زود العداد
+          setNotifications(prev => [newNotif, ...prev])
+          setUnreadCount(prev => prev + 1)
         }
       )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel) // ✅ cleanup عند الخروج
+      supabase.removeChannel(channel)
     }
   }, [userId])
 
@@ -70,7 +69,6 @@ export function useNotifications(userId: string) {
     fetchNotifications(nextPage)
   }
 
-  // ✅ Mark all as read
   const markAllAsRead = async () => {
     await supabase
       .from('notifications')
@@ -82,5 +80,36 @@ export function useNotifications(userId: string) {
     setUnreadCount(0)
   }
 
-  return { notifications, unreadCount, loading, hasMore, loadMore, markAllAsRead }
+  // ✅ الحذف مع الـ fix
+  const removeNotification = async (id: string) => {
+    // ✅ دور على الـ notification برا الـ setState
+    const notif = notifications.find(n => n.id === id)
+
+    // ✅ كل state لوحدها
+    setNotifications(prev => prev.filter(n => n.id !== id))
+
+    if (notif && !notif.is_read) {
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    }
+
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error(error)
+      fetchNotifications(0)
+    }
+  }
+
+  return { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    hasMore, 
+    loadMore, 
+    markAllAsRead, 
+    removeNotification 
+  }
 }

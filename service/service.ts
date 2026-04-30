@@ -309,9 +309,6 @@ export const addNewStorie = async ({ content, file, isImage, avatarBg }: {
 
 
 // get notificatoins
-
-
-
 const NOTIFICATIONS_PER_PAGE = 20
 
 export const getNotifications = async (
@@ -338,3 +335,17 @@ export const getNotifications = async (
 }
 
 
+// remove notification item from supabase
+export const removeNotificationById = async (id: string) => {
+  const { data, error } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    throw new Error(error.message);
+  }
+
+  return data;
+};
