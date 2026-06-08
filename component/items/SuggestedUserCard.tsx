@@ -1,55 +1,46 @@
 "use client";
 
-import { useFollow } from "@/Query/useFollow";
-import { useToggleFollow } from "@/Query/useToggleFollow";
+import { useIsFollowing, useToggleFollow } from "@/Query/useFollow";
 import Image from "next/image";
 import Link from "next/link";
 
 interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
-  avatar_url?: string;
+  profile_image?: string | null; // ✅ بدل avatar_url
 }
 
 export const SuggestedUserCard = ({ user }: { user: User }) => {
-  const { data: followData, isLoading: followLoading } = useFollow(user.id);
-  const toggleFollow = useToggleFollow();
-
-  const handleFollow = () => {
-    if (!followData) return;
-
-    toggleFollow.mutate({
-      profileId: user.id,
-      userId: followData.userId,
-      isFollowing: followData.isFollowing,
-    });
-  };
+  const { data: followData, isLoading: followLoading } = useIsFollowing(
+    user.id,
+  );
+  const { mutate: toggleFollow, isPending } = useToggleFollow(user.id);
 
   return (
     <div className="flex items-center justify-between mt-3">
-      {/* left section */}
+      {/* User Info */}
       <Link href={`/OuherProfile/${user.id}`}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 cursor-pointer">
           <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center text-[13px] overflow-hidden">
-            {user.avatar_url ? (
+            {user.profile_image ? (
               <div className="w-full h-full relative">
                 <Image
-                  src={user.avatar_url}
-                  alt="avatar"
+                  src={user.profile_image}
+                  alt={user.username}
                   fill
                   className="rounded-full object-cover"
                 />
               </div>
             ) : (
-              <p>{user.username.slice(0, 2)}</p>
+              <p>{user.username.slice(0, 2).toUpperCase()}</p>
             )}
           </div>
 
           <div>
             <p className="text-[14px] text-white truncate max-w-[200px]">
               {user.username.length >= 11
-                ? user.username.slice(0, 11) + "..."
+                ? `${user.username.slice(0, 11)}...`
                 : user.username}
             </p>
             <p className="text-gray-500 text-[10px]">
@@ -59,18 +50,18 @@ export const SuggestedUserCard = ({ user }: { user: User }) => {
         </div>
       </Link>
 
-      {/* follow button */}
+      {/* Follow Button */}
       <button
-        onClick={handleFollow}
-        disabled={toggleFollow.isPending || followLoading}
-        className={`border rounded-2xl text-center w-[70px] py-1 cursor-pointer text-[12px] ${
+        onClick={() => toggleFollow()}
+        disabled={isPending || followLoading}
+        className={`border rounded-2xl text-center w-[80px] py-1 text-[12px] transition cursor-pointer ${
           followData?.isFollowing
-            ? "bg-blue-700 text-white"
-            : "border-blue-700 text-blue-700"
+            ? "bg-blue-700 text-white border-blue-700"
+            : "border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white"
         }`}
       >
-        {toggleFollow.isPending
-          ? "Foll.."
+        {isPending
+          ? "Follo.."
           : followData?.isFollowing
             ? "Following"
             : "Follow"}

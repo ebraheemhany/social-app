@@ -6,7 +6,7 @@ import LeftSection from "@/component/leftSection/leftSection";
 import RighteSection from "@/component/righteSection/righteSection";
 import ShowSomeUsers from "@/component/items/ShowSomeUsers";
 import TreendingPosts from "@/component/items/TreendingPosts";
-import { useSearch } from "@/component/items/SearchHook";
+import { useSearch } from "@/Query/useSearch";
 import SearchResults from "@/component/items/SearchResults"; // ✅ أضفنا الاستيراد
 import Search_history from "@/component/items/Search_history";
 
@@ -24,7 +24,26 @@ const categories = [
 
 export default function ExplorePage() {
   const [activeCat, setActiveCat] = useState("كل شيء"); // ✅ مرة واحدة بس
-  const { query, results, loading, search, executeSearch } = useSearch();
+  const [query, setQuery] = useState("");
+  const { data, isLoading } = useSearch(query);
+
+  const saveSearchHistory = (term: string) => {
+    if (!term.trim() || typeof window === "undefined") return;
+    const savedHistory = localStorage.getItem("search_history");
+    const history = savedHistory ? JSON.parse(savedHistory) : [];
+    const normalized = term.trim();
+    const updatedHistory = [
+      normalized,
+      ...history.filter((item: string) => item !== normalized),
+    ].slice(0, 10);
+    localStorage.setItem("search_history", JSON.stringify(updatedHistory));
+  };
+
+  const executeSearch = (term: string) => {
+    if (!term.trim()) return;
+    saveSearchHistory(term);
+    setQuery(term);
+  };
 
   return (
     <div className="w-full flex justify-center">
@@ -46,7 +65,7 @@ export default function ExplorePage() {
                 placeholder="Search for posts, hashtags, and people..."
                 className="bg-transparent outline-none text-sm text-white w-full"
                 value={query}
-                onChange={(e) => search(e.target.value)}
+                onChange={(e) => setQuery(e.target.value)}
               />
               <button
                 onClick={() => executeSearch(query)}
@@ -58,9 +77,9 @@ export default function ExplorePage() {
             {/* ✅ الـ div بتاع search اتقفل هنا صح */}
             {/* 🔎 Search Results */}
             <SearchResults
-              users={results.profiles}
-              posts={results.posts}
-              loading={loading}
+              users={data?.users || []}
+              posts={data?.posts || []}
+              loading={isLoading}
               query={query}
               executeSearch={executeSearch}
             />

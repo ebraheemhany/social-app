@@ -39,8 +39,7 @@ const SearchResults = ({
     );
   }
 
-  console.log("users =>", users);
-  console.log("posts =>", posts);
+
 
   return (
     <div className="bg-[#1E1E22] border border-gray-700 rounded-xl p-4 mb-5 flex flex-col gap-4">

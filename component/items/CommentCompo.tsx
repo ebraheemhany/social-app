@@ -2,161 +2,184 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useGetCommentsById } from "@/Query/useGetCommentsById";
-import { useAddCommentById } from "@/Query/useAddCommentById";
-
-type CurrentUser = {
-  id: string;
-  profile?: {
-    username?: string;
-    avatar_url?: string | null;
-  };
-} | null;
-
-type PropsValue = {
-  postId: string;
-  currentUser: CurrentUser;
-};
-
-type Comment = {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  profiles:
-    | {
-        // اجعلها مصفوفة
-        username: string;
-        avatar_url: string | null;
-      }[]
-    | null;
-};
-
-const CommentCompo = ({ postId, currentUser }: PropsValue) => {
+import {
+  useGetComments,
+  useCreateComment,
+  useDeleteComment,
+  useEditComment,
+  Comment,
+} from "@/Query/useComments";
+import { useUser } from "@/context/UserContext";
+import { PencilLine } from "lucide-react";
+const CommentCompo = ({ postId }: { postId: number }) => {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState("");
 
-  // React Query - fetch comments
-  const { data: comments, isLoading, error } = useGetCommentsById(postId);
+  const { user } = useUser();
 
-  const safeComments: Comment[] = comments ?? [];
+  const { data: comments = [], isLoading, error } = useGetComments(postId);
+  const { mutate: createComment, isPending } = useCreateComment(postId);
+  const { mutate: deleteComment } = useDeleteComment(postId);
+  const { mutate: editComment, isPending: isEditing } = useEditComment(postId);
 
-  // React Query - add comment
-  const { mutate: addComment, isPending } = useAddCommentById();
+  // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const submitComment = () => {
-    if (!draft.trim() || !currentUser) return;
+    if (!draft.trim() || !user) return;
+    createComment(draft.trim(), { onSuccess: () => setDraft("") });
+  };
 
-    addComment(
-      {
-        postId,
-        userId: currentUser.id,
-        content: draft.trim(),
-      },
-      {
-        onSuccess: () => setDraft(""),
-      },
+  const startEdit = (c: Comment) => {
+    setEditingId(c.id);
+    setEditDraft(c.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditDraft("");
+  };
+
+  const submitEdit = (commentId: number) => {
+    if (!editDraft.trim()) return;
+    editComment(
+      { commentId, content: editDraft.trim() },
+      { onSuccess: cancelEdit },
     );
   };
 
-  const handleKey = (e: React.KeyboardEvent) => {
+  const handleKey = (e: React.KeyboardEvent, action: () => void) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      submitComment();
+      action();
     }
+    if (e.key === "Escape") cancelEdit();
   };
 
   return (
     <div className="w-full relative">
-      {/* زرار التعليق */}
+      {/* Toggle Button */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] text-gray-400"
       >
         <CommentIcon />
         تعليق
-        {safeComments.length > 0 && (
-          <span className="text-xs text-gray-500">({safeComments.length})</span>
+        {comments.length > 0 && (
+          <span className="text-xs text-gray-500">({comments.length})</span>
         )}
       </button>
 
-      {/* التعليقات */}
+      {/* Comments Panel */}
       <div
-        className="overflow-hidden transition-all duration-300 w-full relative -left-15"
-        style={{
-          maxHeight: open ? "600px" : "0",
-          opacity: open ? 1 : 0,
-        }}
+        className="overflow-hidden transition-all duration-300 w-full"
+        style={{ maxHeight: open ? "800px" : "0", opacity: open ? 1 : 0 }}
       >
         <div className="px-5 pt-3 flex flex-col gap-2.5">
-          {/* loading */}
           {isLoading && <div className="text-gray-400 text-sm">Loading...</div>}
-
-          {/* error */}
           {error && (
             <div className="text-red-400 text-sm">Error loading comments</div>
           )}
 
-          {/* comments */}
-
           {!isLoading &&
             !error &&
-            safeComments.map((c) => {
-              // هنا نقوم باستخراج البروفايل من المصفوفة (أول عنصر)
-              const userProfile = Array.isArray(c.profiles)
-                ? c.profiles[0]
-                : c.profiles;
-
-              return (
-                <div key={c.id} className="flex items-start gap-3">
-                  {/* avatar */}
-                  <div className="w-8 h-8 rounded-full bg-green-300">
-                    {/* نستخدم الآن المتغير userProfile الذي قمنا بتعريفه */}
-                    {userProfile?.avatar_url ? (
-                      <div className="relative w-full h-full rounded-full overflow-hidden">
-                        <Image
-                          src={userProfile.avatar_url}
-                          alt="avatar"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-500">
-                        {userProfile?.username?.charAt(0).toUpperCase() || "?"}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* comment */}
-                  <div className="bg-gray-700 rounded-xl px-3 py-2 flex-1">
-                    <strong className="text-xs text-gray-100 block">
-                      {userProfile?.username}
-                    </strong>
-                    <p className="text-[13px] text-gray-300">{c.content}</p>
-                  </div>
+            comments.map((c: Comment) => (
+              <div key={c.id} className="flex items-start gap-3 group">
+                {/* Avatar */}
+                <div className="w-8 h-8 rounded-full bg-blue-600 shrink-0 overflow-hidden flex items-center justify-center">
+                  {c.profile_image ? (
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={c.profile_image}
+                        alt="avatar"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-white font-bold">
+                      {c.username?.charAt(0).toUpperCase() ?? "?"}
+                    </span>
+                  )}
                 </div>
-              );
-            })}
+
+                {/* Content أو Edit Input */}
+                <div className="bg-gray-700 rounded-xl px-3 py-2 flex-1">
+                  <strong className="text-xs text-gray-100 block mb-1">
+                    {c.username}
+                  </strong>
+
+                  {editingId === c.id ? (
+                    // ── Edit Mode ──────────────────────────────────────────
+                    <div className="flex flex-col gap-2">
+                      <textarea
+                        rows={2}
+                        value={editDraft}
+                        autoFocus
+                        onChange={(e) => setEditDraft(e.target.value)}
+                        onKeyDown={(e) => handleKey(e, () => submitEdit(c.id))}
+                        className="w-full bg-gray-800 text-white rounded-lg p-2 text-sm resize-none outline-none"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={cancelEdit}
+                          className="text-xs text-gray-400 hover:text-white px-3 py-1 rounded-lg bg-gray-600 transition"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => submitEdit(c.id)}
+                          disabled={isEditing || !editDraft.trim()}
+                          className="text-xs text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg disabled:opacity-50 transition"
+                        >
+                          {isEditing ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // ── View Mode ──────────────────────────────────────────
+                    <p className="text-[13px] text-gray-300">{c.content}</p>
+                  )}
+                </div>
+
+                {/* Actions — بس لو صاحب التعليق */}
+                {Number(user?.id) === c.user_id && editingId !== c.id && (
+                  <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition mt-3">
+                    <button
+                      onClick={() => startEdit(c)}
+                      className="text-gray-400 hover:text-blue-400 text-xs cursor-pointer"
+                    >
+                      <PencilLine size={13} />
+                    </button>
+                    <button
+                      onClick={() => deleteComment(c.id)}
+                      className="text-gray-400 hover:text-red-400 text-xs cursor-pointer "
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
         </div>
 
-        {/* input */}
+        {/* New Comment Input */}
         <div className="px-5 pt-3 pb-4 flex gap-2 items-end w-full">
           <textarea
             rows={1}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={handleKey}
+            onKeyDown={(e) => handleKey(e, submitComment)}
             placeholder="Add Comment..."
-            className="flex-1 bg-gray-800 text-white rounded-xl p-2 text-sm"
+            className="flex-1 bg-gray-800 text-white rounded-xl p-2 text-sm resize-none outline-none"
           />
-
           <button
             onClick={submitComment}
-            disabled={isPending || !currentUser || !draft.trim()}
-            className="text-white bg-blue-800 px-4 py-1.5 rounded-lg text-sm disabled:opacity-50"
+            disabled={isPending || !user || !draft.trim()}
+            className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg text-sm disabled:opacity-50 transition"
           >
-            {isPending ? "..." : currentUser ? "add" : "Sign in"}
+            {isPending ? "Adding..." : user ? "Add" : "Sign in"}
           </button>
         </div>
       </div>
@@ -166,7 +189,6 @@ const CommentCompo = ({ postId, currentUser }: PropsValue) => {
 
 export default CommentCompo;
 
-/* icon */
 const CommentIcon = () => (
   <svg
     width="16"

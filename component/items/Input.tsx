@@ -26,7 +26,10 @@ const Input = <T extends FieldValues>({
 }: InputProps<T>) => {
   return (
     <div>
-      <div className="w-[95%] mx-auto bg-[#292C35] rounded-lg flex items-center gap-2 text-gray-100 p-3">
+      <div
+        className="w-full px-4 py-3 rounded-xl bg-[#e8e6f0] text-[#3b3270] placeholder-[#9490b8] flex items-center gap-2
+            text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#7c3aed]/60 transition"
+      >
         {icon}
         <input
           type={type}

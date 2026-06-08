@@ -1,6 +1,9 @@
 import { supabase } from "@/lib/supabase"
 import { AppNotification } from "@/typing/type";
 
+
+
+
 // get post by id
 export const getPostById = async (id: string) => {
   const { data, error } = await supabase
@@ -59,7 +62,7 @@ export const getLikesByPostId = async (postId: string, userId?: string) => {
     liked,
   };
 };
-// add or remove like from db
+
 
 // get comments from db
 export const getCommentByPostId = async (postId: string) => {
@@ -164,8 +167,6 @@ export const toggleFollow = async ({
 
 
 // get and send chat between users
-
-
 export async function getOrCreateConversation(
   currentUserId?: string,
   otherUserId?: string

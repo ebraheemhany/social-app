@@ -1,29 +1,36 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Slider from "react-slick";
-import { useGetUsers } from "@/Query/useGetUsers";
+import { useGetSuggestedUsers } from "@/Query/useUsers";
+import { useIsFollowing, useToggleFollow } from "@/Query/useFollow";
 
-type User = {
-  id: string;
-  username: string;
-  avatar_url: string | null;
+// ─── Follow Button منفصل عشان كل user عنده hook خاص ────────────────────────
+
+const FollowButton = ({ userId }: { userId: number }) => {
+  const { data: followData, isLoading } = useIsFollowing(userId);
+  const { mutate: toggleFollow, isPending } = useToggleFollow(userId);
+
+  return (
+    <button
+      onClick={() => toggleFollow()}
+      disabled={isPending || isLoading}
+      className={`mt-2 px-4 py-1 rounded-full text-xs transition disabled:opacity-50 ${
+        followData?.isFollowing
+          ? "border border-gray-600 text-gray-400"
+          : "bg-purple-600 text-white hover:bg-purple-700"
+      }`}
+    >
+      {isPending ? "follo.." : followData?.isFollowing ? "Following" : "Follow"}
+    </button>
+  );
 };
 
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 const ShowSomeUsers = () => {
-  const [following, setFollowing] = useState<string[]>([]);
-
-  const { data: users, isLoading, error } = useGetUsers();
-
-  const safeUsers: User[] = users ?? [];
-
-  const toggleFollow = (id: string) => {
-    setFollowing((prev) =>
-      prev.includes(id) ? prev.filter((u) => u !== id) : [...prev, id],
-    );
-  };
+  const { data: users = [], isLoading, error } = useGetSuggestedUsers();
 
   const settings = {
     dots: true,
@@ -43,29 +50,15 @@ const ShowSomeUsers = () => {
       },
       {
         breakpoint: 600,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 2,
-          initialSlide: 2,
-        },
+        settings: { slidesToShow: 3, slidesToScroll: 2, initialSlide: 2 },
       },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        },
-      },
+      { breakpoint: 480, settings: { slidesToShow: 2, slidesToScroll: 1 } },
     ],
   };
 
-  if (isLoading) {
-    return <div className="text-gray-400">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-400">Error loading users</div>;
-  }
+  if (isLoading) return <div className="text-gray-400">Loading...</div>;
+  if (error) return <div className="text-red-400">Error loading users</div>;
+  if (users.length === 0) return null;
 
   return (
     <div className="mx-2">
@@ -73,38 +66,34 @@ const ShowSomeUsers = () => {
 
       <div className="mb-6">
         <Slider {...settings}>
-          {safeUsers.map((user) => (
+          {users.map((user) => (
             <div key={user.id} className="p-2">
               <div className="bg-[#1E1E22] border border-gray-700 rounded-xl p-3 flex flex-col items-center">
                 <Link href={`/OuherProfile/${user.id}`}>
                   <div className="w-12 h-12 relative mb-2">
-                    {user.avatar_url ? (
+                    {user.profile_image ? ( // ✅ profile_image بدل avatar_url
                       <Image
-                        src={user.avatar_url}
+                        src={user.profile_image}
                         alt="avatar"
                         fill
-                        className="rounded-full"
+                        className="rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full rounded-full bg-blue-700 flex items-center justify-center">
-                        <p>{user?.username.slice(0, 2)}</p>
+                        <p className="text-white text-xs font-bold">
+                          {user.username.slice(0, 2).toUpperCase()}
+                        </p>
                       </div>
                     )}
                   </div>
                 </Link>
 
-                <p className="text-white text-sm">{user.username}</p>
+                <p className="text-white text-sm truncate max-w-[80px] text-center">
+                  {user.username}
+                </p>
 
-                <button
-                  onClick={() => toggleFollow(user.id)}
-                  className={`mt-2 px-4 py-1 rounded-full text-xs ${
-                    following.includes(user.id)
-                      ? "border border-gray-600 text-gray-400"
-                      : "bg-purple-600 text-white"
-                  }`}
-                >
-                  {following.includes(user.id) ? "following" : "follow"}
-                </button>
+                {/* ✅ FollowButton منفصل — كل user عنده useIsFollowing خاص بيه */}
+                <FollowButton userId={user.id} />
               </div>
             </div>
           ))}

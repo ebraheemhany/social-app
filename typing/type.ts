@@ -19,3 +19,12 @@ export interface AppNotification {
     content: string
   } | null
 }
+
+export interface userData {
+  name: string
+  email: string
+  password: string
+}
+
+
+

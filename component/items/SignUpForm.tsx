@@ -1,17 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema, SignUpData } from "@/Schema/Schema";
 import Input from "@/component/items/Input";
 import { User, Mail, ShieldAlert } from "lucide-react";
 import Link from "next/link";
-import { signUp } from "@/services/auth.service";
+
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useRegister } from "@/Query/useAuth";
 
 const SignUpForm = () => {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const { mutate, isPending } = useRegister();
   const {
     register,
     handleSubmit,
@@ -22,16 +26,34 @@ const SignUpForm = () => {
 
   const onSubmit = async (data: SignUpData) => {
     try {
-      const response = await signUp(data.email, data.password, data.username);
-      // حفظ ال token في cookies
-      if (response.user?.id) {
-        document.cookie = `auth_token=${response.user.id}; path=/; max-age=604800`;
-      }
+      setLoading(true);
+
+      await mutate({
+        email: data.email,
+        password: data.password,
+        username: data.username,
+      });
+
+      // if (response.user?.id) {
+      //   document.cookie = `auth_token=${response.user.id}; path=/; max-age=604800`;
+      // }
+
       toast.success("Sign Up Successfully");
       router.push("/");
-    } catch (err: any) {
-      toast.error(err.message || "Sign Up Failed");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message || "Sign Up Failed");
+      } else {
+        toast.error("Sign Up Failed");
+      }
+    } finally {
+      setLoading(false);
     }
+  };
+  // googe login
+  const handleGoogleLogin = () => {
+    window.location.href =
+      "https://back-app-production-e21a.up.railway.app/api/auth/google";
   };
 
   return (
@@ -54,7 +76,6 @@ const SignUpForm = () => {
             placeholder="Email"
             icon={<Mail className="w-5 h-5 text-gray-400" />}
             register={register}
-            error={errors.email}
           />
 
           {/* password */}
@@ -67,28 +88,67 @@ const SignUpForm = () => {
             error={errors.password}
           />
 
-          {/* rest password */}
+          {/* confirm password */}
           <Input
             name="restpassword"
             type="password"
-            placeholder="Rest Password"
+            placeholder="Confirm Password"
             icon={<ShieldAlert className="w-5 h-5 text-gray-400" />}
             register={register}
             error={errors.restpassword}
           />
 
-          <div className="flex items-center justify-center">
-            <button className="bg-blue-800 text-white py-2 mx-3 rounded w-[100%] cursor-pointer  ">
-              Create Account
-            </button>
-          </div>
-          <p className="text-white text-[16px] mb-3 ml-3 ">
-            Already have an account?{" "}
-            <Link href={"/sign-in"} className="text-blue-700 cursor-pointer ">
-              [Sign in]
-            </Link>
-          </p>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 mt-2 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] active:scale-[0.98]
+            text-white font-bold text-base tracking-wide transition-all duration-150
+            disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isPending ? (
+              <>
+                <svg
+                  className="animate-spin w-4 h-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  />
+                </svg>
+                Creating account...
+              </>
+            ) : (
+              "Sign Up"
+            )}
+          </button>
         </form>
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full mt-4  active:scale-[0.98] hover:underline
+            text-white font-bold cursor-pointer text-base"
+        >
+          Continue with Google
+        </button>
+        <div className="mt-6 -mx-8 bg-[#e8e6f0] rounded-t-3xl py-4 text-center">
+          <Link
+            href="/sign-in"
+            className="text-[#3b3270] font-semibold text-base hover:text-[#6d28d9] transition"
+          >
+            Login
+          </Link>
+        </div>
       </div>
     </div>
   );

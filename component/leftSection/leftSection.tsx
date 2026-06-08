@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   House,
@@ -11,25 +10,46 @@ import {
   Users,
   Star,
   TvMinimalPlay,
-  Settings,
+  LogOut,
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@/context/UserContext";
+import Image from "next/image";
+import { useLogout } from "@/Query/useAuth";
 const LeftSection = () => {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
+  //  user data
+  const { user } = useUser();
+
+  // function to logout
+  const { mutate: logout, isPending } = useLogout();
+
+  const logoutFun = () => {
+    logout();
+  };
+
+  // get messages count and notification Count from context
+  const { messageCount, notificationCount } = useUser();
+
   return (
     <div className=" w-full h-full  bg-[#161618] border-r border-gray-600">
       <div>
         <Link href="/">
-          <div className="relative w-[150px] h-[70px] ml-3 ">
-            <Image src="/icon/logo.svg" alt="logo" fill />
+          <div className=" ml-3 ">
+            <Image
+              src="/icon/logo.svg"
+              alt="logo"
+              width={150}
+              height={100}
+              priority
+              loading="eager"
+            />
           </div>
         </Link>
-
         <div className="w-full h-[1px] bg-gray-600 mt-2"></div>
-
-        <div className="">
+        {/* <div className="">
           <input
             type="search"
             placeholder="Search..."
@@ -42,8 +62,7 @@ const LeftSection = () => {
             rounded-lg
             outline-none px-3 py-1"
           />
-        </div>
-
+        </div> */}
         <div className="mt-8 ml-3">
           <p className="text-[13px] text-gray-700">MAIN</p>
 
@@ -57,6 +76,7 @@ const LeftSection = () => {
                 <p>Home</p>
               </Link>
             </li>
+
             <li
               className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition
   ${isActive("/explore") ? "bg-gray-700 text-white" : "text-gray-500 hover:bg-gray-700 hover:text-white"}`}
@@ -73,13 +93,15 @@ const LeftSection = () => {
   ${isActive("/Notifications") ? "bg-gray-700 text-white" : "text-gray-500 hover:bg-gray-700 hover:text-white"}`}
               >
                 <div className="flex items-center gap-2">
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-5 h-5 " />
                   <p>Notifications</p>
                 </div>
                 <div>
-                  <span className="bg-blue-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    3
-                  </span>
+                  {notificationCount > 0 && (
+                    <span className="bg-blue-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center mr-2">
+                      {notificationCount}
+                    </span>
+                  )}
                 </div>
               </li>
             </Link>
@@ -93,64 +115,79 @@ const LeftSection = () => {
                   <p>Messages</p>
                 </div>
                 <div>
-                  <span className="bg-blue-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    3
-                  </span>
+                  {messageCount > 0 && (
+                    <span className="bg-blue-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center mr-2">
+                      {messageCount}
+                    </span>
+                  )}
                 </div>
               </li>
             </Link>
-            <li className="flex items-center gap-2 py-2 cursor-pointer">
+            <li className="flex items-center gap-2 py-2 px-2 cursor-pointer">
               <Bookmark className="w-5 h-5" />
               <p>Saved</p>
             </li>
           </ul>
-        </div>
+        </div>{" "}
         <div className="w-[90%] h-px mx-auto bg-gray-700 mt-2"></div>
-
         <div className="mt-8 ml-3">
           <p className="text-[13px] text-gray-700">DISCOVER</p>
-
           <ul className="text-gray-500">
             <Link href="/frinds">
               <li
-                className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition
+                className={`flex items-center gap-2 py-1 px-2 rounded-lg cursor-pointer transition
   ${isActive("/frinds") ? "bg-gray-700 text-white" : "text-gray-500 hover:bg-gray-700 hover:text-white"}`}
               >
                 <Users className="w-5 h-5" />
                 <p>Friends</p>
               </li>
             </Link>
-            <li className="flex items-center gap-2 py-2 cursor-pointer">
+            <li className="flex items-center gap-2 py-1 px-2 mt-3  text-gray-500 hover:bg-gray-700 hover:text-white rounded-lg cursor-pointer transition">
               <Star className="w-5 h-5" />
               <p>CreaTor Studop</p>
             </li>
-            <li className="flex items-center gap-2 py-2 cursor-pointer">
+            <li className="flex items-center gap-2 py-1 px-2 mt-3  text-gray-500 hover:bg-gray-700 hover:text-white rounded-lg cursor-pointer transition">
               <TvMinimalPlay className="w-5 h-5" />
               <p>Live</p>
             </li>
           </ul>
         </div>
-
         <div className="w-[90%] h-px mx-auto bg-gray-700 mt-2"></div>
-
-        <div className="flex items-center gap-2 py-2 cursor-pointer mt-3 ml-3 text-gray-500">
-          <Settings className="w-5 h-5" />
-          <p>Settings</p>
+        <div
+          onClick={() => logoutFun()}
+          className="flex items-center gap-2 py-2 px-2  mt-3 ml-3  text-gray-500 hover:bg-gray-700 hover:text-white rounded-lg cursor-pointer transition"
+        >
+          <LogOut className="w-5 h-5" />
+          <p>LogOut</p>
         </div>
-
         <div className="absolute bottom-0 w-full">
           <div className="w-full h-[1px] bg-gray-600 mt-2"></div>
 
           <Link href="/ProfilePage">
             <div className="flex items-center justify-between m-3">
               <div className="flex gap-2">
-                <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center">
-                  Ah
+                <div className="relative w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center">
+                  {user?.profile_image ? (
+                    <Image
+                      src={user.profile_image}
+                      alt="Profile"
+                      width={36}
+                      height={36}
+                      className="rounded-full"
+                      sizes="36px"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center">
+                      {user?.username?.slice(0, 2)?.toUpperCase()}
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <p className="text-[16px] text-white">Ahmed M.</p>
-                  <p className="text-gray-500 text-[14px]">@ahmedm</p>
+                  <p className="text-[16px] text-white">{user?.username}</p>
+                  <p className="text-gray-500 text-[14px]">
+                    @{user?.email?.split("@")[0]}
+                  </p>
                 </div>
               </div>
 

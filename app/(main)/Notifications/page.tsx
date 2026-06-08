@@ -1,14 +1,18 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import LeftSection from "@/component/leftSection/leftSection";
 import RighteSection from "@/component/righteSection/righteSection";
-import { useNotifications } from "@/Query/useNotification";
+import {
+  useNotifications,
+  useMarkAllAsRead,
+  useDeleteNotification,
+} from "@/Query/useNotifications";
+import { useUser } from "@/context/UserContext";
+import type { AppNotification } from "@/Query/useNotifications";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { AppNotification } from "@/typing/type";
-import { useGetCurrentUser } from "@/Query/useGetUserByid";
 import { X } from "lucide-react";
 
 const tabs = [
@@ -36,24 +40,31 @@ const getMessage = (type: string, username: string) => {
 
 export default function NotificationsPage() {
   const [tab, setTab] = useState("all");
-  const { data } = useGetCurrentUser();
+  const router = useRouter();
+  const { user, setNotificationCount } = useUser();
 
-  const userId = data?.profile.id ?? "";
+  const { data, isLoading } = useNotifications();
+  const { mutate: markAllAsRead } = useMarkAllAsRead();
+  const { mutate: removeNotification } = useDeleteNotification();
 
-  const {
-    notifications,
-    unreadCount,
-    loading,
-    hasMore,
-    loadMore,
-    markAllAsRead,
-    removeNotification, // ✅ من الـ hook مباشرة
-  } = useNotifications(userId);
+  const notifications = data?.notifications ?? [];
+  const unreadCount = data?.unread ?? 0;
+  // add notification count in context
+  useEffect(() => {
+    setNotificationCount(unreadCount);
+  }, [unreadCount]);
 
-  const filtered: AppNotification[] =
+  if (!user) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center bg-black text-white">
+        <p className="text-lg">Please sign in to view your notifications.</p>
+      </div>
+    );
+  }
+
+  const filtered =
     tab === "all" ? notifications : notifications.filter((n) => n.type === tab);
 
-  const router = useRouter();
   const handleNotificationClick = (notif: AppNotification) => {
     switch (notif.type) {
       case "like":
@@ -61,10 +72,10 @@ export default function NotificationsPage() {
         if (notif.post_id) router.push(`/posts/${notif.post_id}`);
         break;
       case "follow":
-        if (notif.sender_id) router.push(`/OuherProfile/${notif.sender_id}`);
+        router.push(`/OuherProfile/${notif.sender_id}`);
         break;
       case "message":
-        if (notif.message_id) router.push(`/Messages?conv=${notif.message_id}`);
+        router.push(`/Messages`);
         break;
     }
   };
@@ -109,7 +120,7 @@ export default function NotificationsPage() {
                     </span>
                     {unreadCount > 0 && (
                       <button
-                        onClick={markAllAsRead}
+                        onClick={() => markAllAsRead()}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-full transition"
                       >
                         Mark all as read
@@ -136,7 +147,7 @@ export default function NotificationsPage() {
                 </div>
 
                 {/* Loading skeleton */}
-                {loading && notifications.length === 0 && (
+                {isLoading && (
                   <div className="flex flex-col gap-3">
                     {[...Array(3)].map((_, i) => (
                       <div
@@ -148,7 +159,7 @@ export default function NotificationsPage() {
                 )}
 
                 {/* Notifications List */}
-                {!loading || notifications.length > 0 ? (
+                {!isLoading && (
                   <div className="flex flex-col gap-3">
                     {filtered.length === 0 ? (
                       <div className="rounded-3xl border border-dashed border-gray-700 bg-[#151518] p-6 text-center text-gray-400">
@@ -166,25 +177,25 @@ export default function NotificationsPage() {
                           } hover:bg-[#1c1c1f]`}
                         >
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            {/* ✅ w-full على الـ parent */}
                             <div className="flex items-center gap-3 w-full">
                               {/* Avatar */}
                               <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-700 shrink-0">
-                                {notif.sender?.avatar_url ? (
+                                {notif.sender_image ? (
                                   <Image
-                                    src={notif.sender.avatar_url}
-                                    alt={notif.sender.username}
+                                    src={notif.sender_image}
+                                    alt={notif.sender_name ?? "Sender"}
                                     fill
                                     className="object-cover"
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg bg-blue-600">
-                                    {notif.sender?.username?.[0]?.toUpperCase()}
+                                    {notif.sender_name?.[0]?.toUpperCase() ??
+                                      "S"}
                                   </div>
                                 )}
                               </div>
 
-                              {/* Message + Time + X */}
+                              {/* Message + Time + Delete */}
                               <div className="w-full flex justify-between items-center">
                                 <div
                                   className="cursor-pointer"
@@ -193,18 +204,19 @@ export default function NotificationsPage() {
                                   <p className="text-sm text-gray-100">
                                     {getMessage(
                                       notif.type,
-                                      notif.sender?.username ?? "Someone",
+                                      notif.sender_name ?? "Someone",
                                     )}
                                   </p>
                                   <span className="text-xs text-gray-500">
                                     {formatDistanceToNow(
                                       new Date(notif.created_at),
-                                      { addSuffix: true },
+                                      {
+                                        addSuffix: true,
+                                      },
                                     )}
                                   </span>
                                 </div>
 
-                                {/* ✅ shrink-0 عشان متنضغطش */}
                                 <X
                                   onClick={() => removeNotification(notif.id)}
                                   size={20}
@@ -222,18 +234,8 @@ export default function NotificationsPage() {
                         </div>
                       ))
                     )}
-
-                    {hasMore && (
-                      <button
-                        onClick={loadMore}
-                        disabled={loading}
-                        className="w-full py-3 rounded-3xl border border-gray-700 text-gray-400 hover:bg-[#1a1a1b] transition text-sm disabled:opacity-50"
-                      >
-                        {loading ? "Loading..." : "Load more"}
-                      </button>
-                    )}
                   </div>
-                ) : null}
+                )}
               </div>
             </div>
           </div>

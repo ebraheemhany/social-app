@@ -1,10 +1,10 @@
 "use client";
 
-import { useGetUsers } from "@/Query/useGetUsers";
+import { useGetSuggestedUsers } from "@/Query/useUsers";
 import { SuggestedUserCard } from "./SuggestedUserCard";
 
 export const Suggested = () => {
-  const { data, isLoading, error } = useGetUsers();
+  const { data, isLoading, error } = useGetSuggestedUsers();
 
   if (isLoading) {
     return <div className="text-gray-400">Loading...</div>;

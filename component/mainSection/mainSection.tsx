@@ -3,7 +3,6 @@ import React from "react";
 import StoriesBar from "../items/StoriesBar";
 import CreatePost from "../items/CreatePost";
 import CommentSection from "../items/CommentSection";
-
 import { useGetAllPosts } from "@/Query/useGetAllPosts";
 
 const MainSection = () => {
@@ -16,6 +15,10 @@ const MainSection = () => {
 
       {isLoading ? (
         <div className="text-gray-400 text-center mt-10">Loading...</div>
+      ) : error ? (
+        <div className="text-red-400 text-center mt-10">
+          Failed to load posts
+        </div>
       ) : posts?.length === 0 ? (
         <div className="text-gray-400 text-center mt-10">No posts yet</div>
       ) : (

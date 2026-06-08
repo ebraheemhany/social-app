@@ -1,34 +1,31 @@
-import { supabase } from "@/lib/supabase";
-import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+"use client";
 
-type Post = {
-  id: string;
-  content: string;
-  image_url?: string;
-  video_url?: string;
-  likes_count: number;
-  comments_count: number;
-};
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useGetTrendingPosts } from "@/Query/useGetAllPosts";
 
 const TrendingPosts = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
   const router = useRouter();
-  const fetchPosts = async () => {
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*")
-      .order("trending_score", { ascending: false })
-      .limit(20);
+  const { data: posts = [], isLoading, error } = useGetTrendingPosts();
 
-    if (error) console.error("supabase error =>", error);
-    setPosts(data || []);
-  };
+  if (isLoading) {
+    return (
+      <div className="mx-2 mb-20">
+        <p className="text-[14px] text-gray-300 mb-3">Suggested posts</p>
+        <div className="columns-2 md:columns-3 gap-3">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="mb-3 h-[180px] rounded-xl bg-[#1E1E22] animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  if (error) return null;
+  if (posts.length === 0) return null;
 
   return (
     <div className="mx-2 mb-20">
@@ -37,33 +34,38 @@ const TrendingPosts = () => {
       <div className="columns-2 md:columns-3 gap-3">
         {posts.slice(0, 3).map((post) => (
           <div
-            onClick={() => router.push(`/posts/${post.id}`)}
             key={post.id}
-            className="mb-3 break-inside-avoid bg-[#1E1E22] border border-gray-700 rounded-xl overflow-hidden hover:translate-y-[-2px] transition"
+            onClick={() => router.push(`/posts/${post.id}`)}
+            className=" h-[200px] mb-3 break-inside-avoid bg-[#1E1E22] border border-gray-700 rounded-xl overflow-hidden hover:translate-y-[-2px] transition cursor-pointer"
           >
-            <div className="relative h-[120px] bg-gray-700">
-              {post.image_url ? (
-                <div className="relative h-[120px] bg-gray-700">
-                  <Image
-                    src={post.image_url}
-                    alt="post image"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              ) : post.video_url ? (
-                <div className="relative h-[120px] bg-gray-700">
-                  <video
-                    src={post.video_url}
-                    controls
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : null}
-            </div>
+            {/* Media */}
+            {post.media_url && post.media_type === "image" && (
+              <div className="relative h-[120px]">
+                <Image
+                  src={post.media_url}
+                  alt="post"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            )}
 
+            {post.media_url && post.media_type === "video" && (
+              <div className="relative h-[120px]">
+                <video
+                  src={post.media_url}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Content */}
             <div className="p-3">
-              <p className="text-white text-sm mb-1">{post.content}</p>
+              {post.content && (
+                <p className="text-white text-sm mb-2 line-clamp-2">
+                  {post.content}
+                </p>
+              )}
               <div className="flex gap-2 text-xs text-gray-400">
                 <span>❤️ {post.likes_count}</span>
                 <span>💬 {post.comments_count}</span>

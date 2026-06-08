@@ -1,64 +1,70 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { useLikes } from "@/Query/useLikes";
-import { useToggleLike } from "@/Query/useToggleLike";
+import { useToggleLike } from "@/Query/useLikes";
+import { useQueryClient } from "@tanstack/react-query";
+import { POSTS_KEY, Post } from "@/Query/useGetAllPosts";
+import { useUser } from "@/context/UserContext";
 
-type CurrentUser = {
-  id: string;
-};
-
-type PropsValue = {
-  postId: string;
-  currentUser: CurrentUser | null;
-};
-
-const LikesCompo = ({ postId, currentUser }: PropsValue) => {
-  const userId = currentUser?.id;
-  console.log("jfsgjvsdfugayresyuf", currentUser);
-  const { data, isLoading } = useLikes(postId, userId);
-  const toggleLike = useToggleLike();
+const LikesCompo = ({
+  postId,
+  isLiked,
+  likesCount,
+}: {
+  postId: number;
+  isLiked: boolean;
+  likesCount: number;
+}) => {
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+  const currentUserId = user ? Number(user.id) : 0;
+  const { mutate: toggleLike, isPending } = useToggleLike(
+    postId,
+    currentUserId,
+  );
 
   const handleClick = () => {
-    if (!userId || !data) return;
+    if (!user) return;
 
-    toggleLike.mutate({
-      postId,
-      userId,
-      liked: data.liked,
+    // ✅ Optimistic update على الـ posts list
+    queryClient.setQueryData<Post[]>(POSTS_KEY, (old) =>
+      (old ?? []).map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              is_liked: !p.is_liked,
+              likes_count: p.is_liked ? p.likes_count - 1 : p.likes_count + 1,
+            }
+          : p,
+      ),
+    );
+
+    toggleLike(undefined, {
+      onError: () => {
+        // ✅ rollback لو فشل
+        queryClient.invalidateQueries({ queryKey: POSTS_KEY });
+      },
     });
   };
-
-  if (isLoading) {
-    return (
-      <button
-        disabled
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] text-gray-500 bg-gray-900 cursor-wait"
-      >
-        <Heart size={16} fill="none" stroke="currentColor" />0
-      </button>
-    );
-  }
 
   return (
     <button
       onClick={handleClick}
-      disabled={!userId}
+      disabled={!user || isPending}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] transition ${
-        !userId
-          ? "text-gray-500 bg-gray-900 cursor-not-allowed"
-          : data?.liked
+        !user
+          ? "text-gray-500 cursor-not-allowed"
+          : isLiked
             ? "text-red-500"
             : "text-gray-400"
       }`}
     >
       <Heart
         size={16}
-        fill={data?.liked ? "currentColor" : "none"}
+        fill={isLiked ? "currentColor" : "none"}
         stroke="currentColor"
       />
-      {data?.count ?? 0}
-      {/* {!userId && <span className="text-[11px] text-gray-400">Sign in</span>} */}
+      {likesCount}
     </button>
   );
 };

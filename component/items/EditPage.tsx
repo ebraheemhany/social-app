@@ -1,293 +1,168 @@
+// component/items/EditPage.tsx
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
-import Image from "next/image";
-import { useForm } from "react-hook-form";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 
-const CLOUDINARY_CLOUD_NAME = "dc4c10a3f";
-const CLOUDINARY_UPLOAD_PRESET = "social_app";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import { useUpdateProfile } from "@/Query/useUpdateProfile";
+import Image from "next/image";
+import { X } from "lucide-react";
+import { useUser } from "@/context/UserContext";
+const editSchema = z.object({
+  username: z.string().min(2).optional().or(z.literal("")),
+  email: z.string().email().optional().or(z.literal("")),
+  bio: z.string().max(150).optional().or(z.literal("")),
+  password: z.string().min(6).optional().or(z.literal("")),
+});
+
+type EditData = z.infer<typeof editSchema>;
 
 type Props = {
-  state: React.Dispatch<React.SetStateAction<boolean>>;
-  onProfileUpdated?: () => void;
-};
-
-type FormValues = {
-  username: string;
-  email: string;
-  password: string;
-  phone: string;
-  bio: string;
-  avatar: FileList;
+  state: (val: boolean) => void;
+  onProfileUpdated: () => void;
 };
 
 export const EditPage = ({ state, onProfileUpdated }: Props) => {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const { user, setUser } = useUser();
+  const [preview, setPreview] = useState<string | null>(
+    user?.profile_image || null,
+  );
+  const [file, setFile] = useState<File | null>(null);
+  const { mutate: updateProfile, isPending } = useUpdateProfile();
 
+  console.log("user data  => ", user);
   const {
     register,
     handleSubmit,
-    setValue, // ✅ عشان نحط البيانات القديمة
+    reset,
     formState: { errors },
-  } = useForm<FormValues>();
-
-  // ✅ جلب البيانات الحالية
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // جيب بيانات الـ auth
-        setValue("email", user.email || "");
-
-        // جيب بيانات الـ profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("username, bio, phone, avatar_url")
-          .eq("id", user.id)
-          .single();
-
-        if (profile) {
-          setValue("username", profile.username || "");
-          setValue("bio", profile.bio || "");
-          setValue("phone", profile.phone || "");
-          if (profile.avatar_url) setPreview(profile.avatar_url);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setFetching(false);
-      }
-    };
-
-    fetchProfile();
-  }, [setValue]);
-
-  useEffect(() => {
-    return () => {
-      if (preview && preview.startsWith("blob:")) URL.revokeObjectURL(preview);
-    };
-  }, [preview]);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
-
-  const uploadAvatar = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
-      const xhr = new XMLHttpRequest();
-      xhr.onload = () => {
-        const res = JSON.parse(xhr.responseText);
-        if (xhr.status === 200) resolve(res.secure_url);
-        else reject(res);
-      };
-      xhr.onerror = () => reject(new Error("Upload failed"));
-      xhr.open(
-        "POST",
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-      );
-      xhr.send(formData);
-    });
+  } = useForm<EditData>({
+    resolver: zodResolver(editSchema),
+    defaultValues: {
+      username: user?.username || "",
+      email: user?.email || "",
+      bio: user?.bio || "",
+    },
+  });
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (selected) {
+      setFile(selected);
+      setPreview(URL.createObjectURL(selected));
+    }
   };
 
-  const onSubmit = async (data: FormValues) => {
-    setLoading(true);
+  const onSubmit = (data: EditData) => {
+    const formData = new FormData();
+    if (data.username) formData.append("username", data.username);
+    if (data.email) formData.append("email", data.email);
+    if (data.bio) formData.append("bio", data.bio);
+    if (data.password) formData.append("password", data.password);
+    if (file) formData.append("profile_image", file);
 
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not logged in");
-
-      let avatarUrl = null;
-      if (avatarFile) {
-        avatarUrl = await uploadAvatar(avatarFile);
-      }
-
-      const profileUpdates: Record<string, string> = {};
-      if (data.username) profileUpdates.username = data.username;
-      if (data.bio) profileUpdates.bio = data.bio;
-      if (data.phone) profileUpdates.phone = data.phone;
-      if (avatarUrl) profileUpdates.avatar_url = avatarUrl;
-
-      if (Object.keys(profileUpdates).length > 0) {
-        const { error } = await supabase
-          .from("profiles")
-          .update(profileUpdates)
-          .eq("id", user.id);
-
-        if (error) throw error;
-      }
-
-      if (data.email && data.email !== user.email) {
-        const { error } = await supabase.auth.updateUser({ email: data.email });
-        if (error) throw error;
-      }
-
-      if (data.password) {
-        const { error } = await supabase.auth.updateUser({
-          password: data.password,
+    updateProfile(formData, {
+      onSuccess: (updatedUser) => {
+        // حدّث الـ Context بالبيانات الجديدة من الـ backend
+        setUser({
+          id: updatedUser.id,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          bio: updatedUser.bio,
+          profile_image: updatedUser.profile_image,
         });
-        if (error) throw error;
-      }
-
-      toast.success("Profile updated successfully!");
-      onProfileUpdated?.();
-      state(false);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update profile");
-    } finally {
-      setLoading(false);
-    }
+        toast.success("Profile updated successfully");
+        onProfileUpdated();
+        state(false);
+      },
+      onError: (err: any) => {
+        toast.error(err.response?.data?.message || "Update failed");
+      },
+    });
   };
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div
-        className="w-[95%] md:w-[500px] h-[85vh] bg-gray-900 flex flex-col items-center py-4 rounded-xl relative overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-gray-300 text-lg absolute top-4 left-4">
-          Edit Your Profile
-        </h2>
-
-        <div
+      <div className="bg-[#0f0f0f] border border-gray-800 rounded-2xl p-6 w-full max-w-md relative">
+        {/* Close */}
+        <button
           onClick={() => state(false)}
-          className="absolute top-4 right-4 border border-gray-600 rounded-lg cursor-pointer w-7 h-7 flex items-center justify-center hover:bg-gray-800 transition"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white"
         >
-          <X className="w-4 text-white" />
-        </div>
+          <X className="w-5 h-5" />
+        </button>
 
-        {/* loading skeleton */}
-        {fetching ? (
-          <div className="w-[90%] flex flex-col gap-4 mt-12">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="w-full h-10 bg-gray-800 rounded-lg animate-pulse"
-              />
-            ))}
-          </div>
-        ) : (
-          <form
-            className="w-[90%] flex flex-col gap-4 mt-12"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            {/* Avatar */}
-            <div className="flex justify-center">
-              <div className="relative w-24 h-24 rounded-full bg-gray-500 flex items-center justify-center text-2xl shadow-[0_0_10px_#1d4ed8]">
-                {preview ? (
-                  <Image
-                    src={preview}
-                    alt="avatar"
-                    fill
-                    className="rounded-full object-cover"
-                  />
-                ) : (
-                  "AM"
-                )}
-                <div
-                  className="absolute bottom-1 right-1 bg-blue-700 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer text-white hover:scale-110 transition"
-                  onClick={() => inputRef.current?.click()}
-                >
-                  <Plus className="w-4" />
+        <h2 className="text-white text-xl font-bold mb-6">Edit Profile</h2>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Image Upload */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-700">
+              {preview ? (
+                <Image
+                  src={preview}
+                  alt="preview"
+                  width={80}
+                  height={80}
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                  Photo
                 </div>
-              </div>
-
+              )}
+            </div>
+            <label className="text-purple-400 text-sm cursor-pointer hover:text-purple-300">
+              Change Photo
               <input
-                ref={inputRef}
                 type="file"
                 accept="image/*"
+                onChange={handleImageChange}
                 className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setAvatarFile(file);
-                    const url = URL.createObjectURL(file);
-                    setPreview(url);
-                  }
-                }}
               />
-            </div>
+            </label>
+          </div>
 
-            {/* Username */}
-            <div>
-              <label className="text-gray-400 text-sm">Username</label>
-              <input
-                {...register("username")}
-                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 border border-gray-600 focus:border-blue-700 outline-none"
-                placeholder="Enter your username"
-              />
-            </div>
+          {/* Username */}
+          <input
+            {...register("username")}
+            placeholder="Username"
+            className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-purple-500"
+          />
 
-            {/* Email */}
-            <div>
-              <label className="text-gray-400 text-sm">Email</label>
-              <input
-                type="email"
-                {...register("email")}
-                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 border border-gray-600 focus:border-blue-700 outline-none"
-                placeholder="Enter your email"
-              />
-            </div>
+          {/* Email */}
+          <input
+            {...register("email")}
+            type="email"
+            placeholder="Email"
+            className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-purple-500"
+          />
 
-            {/* Password */}
-            <div>
-              <label className="text-gray-400 text-sm">Password</label>
-              <input
-                type="password"
-                {...register("password")}
-                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 border border-gray-600 focus:border-blue-700 outline-none"
-                placeholder="Leave empty to keep current password"
-              />
-            </div>
+          {/* Bio */}
+          <textarea
+            {...register("bio")}
+            placeholder="Bio"
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-purple-500 resize-none"
+          />
 
-            {/* Phone */}
-            <div>
-              <label className="text-gray-400 text-sm">Phone</label>
-              <input
-                {...register("phone")}
-                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 border border-gray-600 focus:border-blue-700 outline-none"
-                placeholder="Enter your phone number"
-              />
-            </div>
+          {/* Password */}
+          <input
+            {...register("password")}
+            type="password"
+            placeholder="New Password (optional)"
+            className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-purple-500"
+          />
 
-            {/* Bio */}
-            <div>
-              <label className="text-gray-400 text-sm">Bio</label>
-              <textarea
-                {...register("bio")}
-                rows={3}
-                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 border border-gray-600 focus:border-blue-700 outline-none resize-none"
-                placeholder="Tell us about yourself"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-700 text-white rounded-lg py-2 hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Saving..." : "Save Changes"}
-            </button>
-          </form>
-        )}
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full py-3 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold disabled:opacity-70"
+          >
+            {isPending ? "Saving..." : "Save Changes"}
+          </button>
+        </form>
       </div>
     </div>
   );
