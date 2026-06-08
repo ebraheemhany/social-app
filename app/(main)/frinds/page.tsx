@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import LeftSection from "@/component/leftSection/leftSection";
 import RighteSection from "@/component/righteSection/righteSection";
-import { supabase } from "@/lib/supabase";
+// import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { getOrCreateConversation } from "@/service/service";
 
@@ -16,39 +16,39 @@ const tabs = [
 
 export default function FriendsPage() {
   const [tab, setTab] = useState("friends");
-  const [session, setSession] = useState<any>(null);
+  // const [session, setSession] = useState<any>(null);
 
-  const [friends, setFriends] = useState<any[]>([]);
+  // const [friends, setFriends] = useState<any[]>([]);
   const router = useRouter();
 
   // ─────────────── get session ───────────────
-  useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-    };
+  // useEffect(() => {
+  //   const getSession = async () => {
+  //     const { data } = await supabase.auth.getSession();
+  //     setSession(data.session);
+  //   };
 
-    getSession();
-  }, []);
+  //   getSession();
+  // }, []);
 
   // ─────────────── get real friends from DB ───────────────
-  useEffect(() => {
-    const fetchFriends = async () => {
-      if (!session?.user?.id) return;
+  // useEffect(() => {
+  //   const fetchFriends = async () => {
+  //     if (!session?.user?.id) return;
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url");
+  //     const { data, error } = await supabase
+  //       .from("profiles")
+  //       .select("id, username, avatar_url");
 
-      if (!error) {
-        setFriends(data || []);
-      }
-    };
+  //     if (!error) {
+  //       setFriends(data || []);
+  //     }
+  //   };
 
-    fetchFriends();
-  }, [session]);
+  //   fetchFriends();
+  // }, [session]);
 
-  if (!session) return null;
+  // if (!session) return null;
 
   return (
     <div className="w-full flex justify-center">
@@ -73,11 +73,11 @@ export default function FriendsPage() {
                   </p>
                 </div>
 
-                <div className="flex gap-2 text-sm text-gray-400">
+                {/* <div className="flex gap-2 text-sm text-gray-400">
                   <span className="bg-[#1b1b1f] px-3 py-2 rounded-full">
                     {friends.length} صديق
                   </span>
-                </div>
+                </div> */}
               </div>
 
               {/* Tabs */}
@@ -98,7 +98,7 @@ export default function FriendsPage() {
               </div>
 
               {/* Friends */}
-              {tab === "friends" && (
+              {/* {tab === "friends" && (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
                   {friends.map((friend) => (
                     <div
@@ -140,7 +140,7 @@ export default function FriendsPage() {
                     </div>
                   ))}
                 </div>
-              )}
+              )} */}
 
               {/* Requests */}
               {tab === "requests" && (
