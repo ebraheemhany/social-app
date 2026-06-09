@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useDeleteStory, useGetStoryViews } from "@/Query/useStories";
 import { useUser } from "@/context/UserContext";
+import { Numans } from "next/font/google";
 
 export default function StoryViewer({
   stories,
@@ -25,7 +26,7 @@ export default function StoryViewer({
   const currentStory = stories[currentIdx];
   const { user } = useUser();
   const { mutate: deleteStory, isPending: isDeleting } = useDeleteStory();
-  const isOwner = user?.id === ownerUserId;
+  const isOwner = Number(user?.id) === ownerUserId;
 
   // ✅ جيب المشاهدين بس لو صاحب الـ story وفتح الـ viewers panel
   const { data: viewsData, isLoading: viewsLoading } = useGetStoryViews(

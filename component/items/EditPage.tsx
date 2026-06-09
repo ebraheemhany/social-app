@@ -21,7 +21,7 @@ type EditData = z.infer<typeof editSchema>;
 
 type Props = {
   state: (val: boolean) => void;
-  onProfileUpdated: () => void;
+  onProfileUpdated?: () => void;
 };
 
 export const EditPage = ({ state, onProfileUpdated }: Props) => {
@@ -73,7 +73,7 @@ export const EditPage = ({ state, onProfileUpdated }: Props) => {
           profile_image: updatedUser.profile_image,
         });
         toast.success("Profile updated successfully");
-        onProfileUpdated();
+        onProfileUpdated?.();
         state(false);
       },
       onError: (err: any) => {

@@ -1,17 +1,35 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ImageIcon, Video, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
 import { useCreatePost } from "@/Query/useAddPost";
+import { getUserFromToken } from "@/lib/getUserFromToken";
+import { useGetCurrentUser } from "@/Query/useGetUserByid";
 
 export default function CreatePost({ onPostCreated }) {
   const [text, setText] = useState("");
   const [mediaPreview, setMediaPreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const { mutate: createPost, isPending } = useCreatePost();
-  const { user } = useUser();
+  const { setUser } = useUser();
+
+  const tokenUser = getUserFromToken();
+
+  const {
+    data: userData,
+    refetch,
+    isLoading,
+    isError,
+    error,
+  } = useGetCurrentUser(tokenUser?.userId ?? "");
+  const user = userData ?? null;
+  console.log("current user => ", user);
+
+  useEffect(() => {
+    if (user) setUser(user);
+  }, [user]);
 
   const imageRef = useRef(null);
   const videoRef = useRef(null);

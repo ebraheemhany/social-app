@@ -3,16 +3,15 @@
 import LeftSection from "../../../component/leftSection/leftSection";
 import RighteSection from "../../../component/righteSection/righteSection";
 import { EditPage } from "@/component/items/EditPage";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { useGetCurrentUser, useGetUserPosts } from "@/Query/useGetUserByid";
+import { useGetUserPosts } from "@/Query/useGetUserByid";
 import { useGetFollowStats } from "@/Query/useFollow";
 import { useUser } from "@/context/UserContext";
 import { UserPen, Trash2, Pencil, Eye } from "lucide-react";
 import { useDeletePostByID } from "@/Query/useDeletePostByID";
 import { toast } from "sonner";
 import { EditPostModal } from "@/component/items/EditPostModal";
-import { getUserFromToken } from "@/lib/getUserFromToken";
 
 type Post = {
   id: string;
@@ -22,27 +21,6 @@ type Post = {
   media_type: string | null;
   created_at: string;
 };
-
-const ProfileSkeleton = () => (
-  <div className="animate-pulse mx-3 md:mx-0 py-6">
-    <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4">
-      <div className="flex flex-col items-center sm:items-start gap-3">
-        <div className="w-24 h-24 rounded-full bg-gray-800" />
-        <div className="h-4 w-32 bg-gray-800 rounded" />
-        <div className="h-3 w-48 bg-gray-800 rounded" />
-        <div className="h-3 w-40 bg-gray-800 rounded" />
-      </div>
-      <div className="flex gap-6">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex flex-col items-center gap-2">
-            <div className="h-5 w-8 bg-gray-800 rounded" />
-            <div className="h-3 w-14 bg-gray-800 rounded" />
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
 
 const PostsSkeleton = () => (
   <div className="grid grid-cols-3 gap-1">
@@ -59,31 +37,14 @@ export default function ProfilePage() {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
-  const { setUser } = useUser();
+  const { user } = useUser();
   const { mutate: deletePost, isPending } = useDeletePostByID();
 
-  // Get user ID from token
-  const tokenUser = getUserFromToken();
-
-  const {
-    data: userData,
-    refetch,
-    isLoading,
-    isError,
-    error,
-  } = useGetCurrentUser(tokenUser?.userId ?? "");
-  const user = userData ?? null;
- 
   const { data: userPosts = [], isLoading: postsLoading } = useGetUserPosts(
-    user?.id ?? 0,
+    user?.id ?? "",
   );
 
-  // ✅ استخدم useGetFollowStats بدل followers_count من الـ user object
-  const { data: followStats } = useGetFollowStats(user?.id ?? 0);
-
-  useEffect(() => {
-    if (user) setUser(user);
-  }, [user]);
+  const { data: followStats } = useGetFollowStats(Number(user?.id) ?? 0);
 
   const handleDelete = () => {
     if (!postToDelete) return;
@@ -110,13 +71,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="w-full md:w-[70%] lg:w-[60%] mt-20 md:mt-10 bg-black text-white min-h-screen flex flex-col">
-            {isLoading ? (
-              <ProfileSkeleton />
-            ) : isError ? (
-              <div className="text-center text-red-500 py-10">
-                {error?.message || "Failed to load profile"}
-              </div>
-            ) : !user ? (
+            {!user ? (
               <div className="text-center text-yellow-500 py-10">
                 No user data found
               </div>
@@ -145,7 +100,6 @@ export default function ProfilePage() {
                   </p>
                 </div>
 
-                {/* ✅ Stats */}
                 <div className="flex gap-6 mt-4 text-center">
                   <div>
                     <p className="font-bold text-lg">{userPosts.length}</p>
@@ -181,7 +135,6 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* Tabs */}
             <div className="flex justify-around border-b border-gray-800">
               {["posts", "bookmark", "tag"].map((tab) => (
                 <button
@@ -198,7 +151,6 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* Posts Grid */}
             {postsLoading ? (
               <PostsSkeleton />
             ) : (
@@ -277,7 +229,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Show Post Modal */}
       {selectedPost && (
         <div
           className="fixed inset-0 bg-black/80 flex justify-center items-center z-50"
@@ -308,7 +259,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Delete Post Modal */}
       {postToDelete && (
         <div
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
@@ -341,7 +291,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Edit Post Modal */}
       {editingPost && (
         <EditPostModal
           post={editingPost}
@@ -349,8 +298,7 @@ export default function ProfilePage() {
         />
       )}
 
-      {/* Edit Profile */}
-      {showEdit && <EditPage state={setShowEdit} onProfileUpdated={refetch} />}
+      {showEdit && <EditPage state={setShowEdit} />}
     </div>
   );
 }
