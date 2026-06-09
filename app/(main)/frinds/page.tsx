@@ -6,7 +6,7 @@ import LeftSection from "@/component/leftSection/leftSection";
 import RighteSection from "@/component/righteSection/righteSection";
 // import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { getOrCreateConversation } from "@/service/service";
+
 
 const tabs = [
   { key: "friends", label: "جميع الأصدقاء" },
