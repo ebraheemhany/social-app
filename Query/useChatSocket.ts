@@ -10,6 +10,9 @@ export const useChatSocket = (conversationId: number) => {
   useEffect(() => {
     if (!conversationId) return;
 
+    // ✅ انضم للـ conversation room
+    socket.emit("join_conversation", conversationId);
+
     const handleNewMessage = (message: Message) => {
       queryClient.setQueryData<Message[]>(
         messagesKey(conversationId),
@@ -21,7 +24,7 @@ export const useChatSocket = (conversationId: number) => {
     socket.on("new_message", handleNewMessage);
 
     return () => {
-      socket.off("new_message", handleNewMessage); // ✅ بيشيل الـ listener بتاع الـ conversation دي بس
+      socket.off("new_message", handleNewMessage);
     };
   }, [conversationId, queryClient]);
 };
