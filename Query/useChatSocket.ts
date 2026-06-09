@@ -10,8 +10,16 @@ export const useChatSocket = (conversationId: number) => {
   useEffect(() => {
     if (!conversationId) return;
 
-    // ✅ انضم للـ conversation room
-    socket.emit("join_conversation", conversationId);
+    const joinAndListen = () => {
+      socket.emit("join_conversation", conversationId);
+    };
+
+    // ✅ لو connected خش على طول، لو لا استنى الـ connect
+    if (socket.connected) {
+      joinAndListen();
+    } else {
+      socket.on("connect", joinAndListen);
+    }
 
     const handleNewMessage = (message: Message) => {
       queryClient.setQueryData<Message[]>(
@@ -24,6 +32,7 @@ export const useChatSocket = (conversationId: number) => {
     socket.on("new_message", handleNewMessage);
 
     return () => {
+      socket.off("connect", joinAndListen);
       socket.off("new_message", handleNewMessage);
     };
   }, [conversationId, queryClient]);
