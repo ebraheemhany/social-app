@@ -40,7 +40,7 @@ export const useGetStories = () => {
       const { data } = await api.get("/api/stories");
       return data.stories;
     },
-    staleTime: 30 * 1000,
+    staleTime: 0,
   });
 };
 

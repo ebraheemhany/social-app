@@ -38,7 +38,7 @@ export const useConversations = () => {
       const { data } = await api.get("/api/conversations");
       return data.conversations;
     },
-    staleTime: 30 * 1000,
+    staleTime: 0,
   });
 };
 
