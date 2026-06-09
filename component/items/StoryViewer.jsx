@@ -1,9 +1,12 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { useDeleteStory, useGetStoryViews } from "@/Query/useStories";
+import {
+  useDeleteStory,
+  useGetStoryViews,
+  useViewStory,
+} from "@/Query/useStories";
 import { useUser } from "@/context/UserContext";
-import { Numans } from "next/font/google";
 
 export default function StoryViewer({
   stories,
@@ -26,9 +29,9 @@ export default function StoryViewer({
   const currentStory = stories[currentIdx];
   const { user } = useUser();
   const { mutate: deleteStory, isPending: isDeleting } = useDeleteStory();
-  const isOwner = Number(user?.id) === ownerUserId;
+  const { mutate: viewStory } = useViewStory();
+  const isOwner = Number(user?.id) === Number(ownerUserId);
 
-  // ✅ جيب المشاهدين بس لو صاحب الـ story وفتح الـ viewers panel
   const { data: viewsData, isLoading: viewsLoading } = useGetStoryViews(
     currentStory?.id,
     isOwner && showViewers,
@@ -59,6 +62,11 @@ export default function StoryViewer({
     setProgress(0);
     setShowOptions(false);
     setShowViewers(false);
+
+    // ✅ سجل الـ view
+    if (currentStory?.id && !isOwner) {
+      viewStory(currentStory.id);
+    }
 
     const tick = (ts) => {
       if (isDoneRef.current) return;
@@ -103,8 +111,7 @@ export default function StoryViewer({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="relative w-[90%] h-[350px]  sm:w-[340px] sm:h-[600px] rounded-2xl overflow-hidden bg-black">
-        {/* Background */}
+      <div className="relative w-[90%] h-[350px] sm:w-[340px] sm:h-[600px] rounded-2xl overflow-hidden bg-black">
         {currentStory.media_url ? (
           currentStory.media_type === "video" ? (
             <video
@@ -228,7 +235,7 @@ export default function StoryViewer({
           onClick={nextStory}
         />
 
-        {/* ✅ Viewers Button — بس لو صاحب الـ story */}
+        {/* Viewers Button */}
         {isOwner && (
           <button
             onClick={() => setShowViewers((v) => !v)}
@@ -239,7 +246,7 @@ export default function StoryViewer({
           </button>
         )}
 
-        {/* ✅ Viewers Panel */}
+        {/* Viewers Panel */}
         {isOwner && showViewers && (
           <div className="absolute bottom-0 left-0 right-0 z-30 bg-[#1E1E22]/95 backdrop-blur rounded-t-2xl p-4 max-h-[60%] overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
