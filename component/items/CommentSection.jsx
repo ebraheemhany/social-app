@@ -47,29 +47,36 @@ export default function CommentSection({ post }) {
           </div>
         </div>
 
+        {post.media_url ? (
+          <>
+            <p className="text-sm text-gray-200 mb-3">{post.content}</p>
+
+            {/* Media */}
+            <div className="mb-3 relative w-full overflow-hidden rounded-xl aspect-[4/5] bg-black">
+              {post.media_type === "image" && (
+                <Image
+                  src={post.media_url}
+                  alt="post"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 700px"
+                  className="object-contain"
+                />
+              )}
+
+              {post.media_type === "video" && (
+                <video
+                  src={post.media_url}
+                  controls
+                  className="w-full h-full object-contain"
+                />
+              )}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-gray-200 mb-3">{post.content}</p>
+        )}
+
         {/* Content */}
-        <p className="text-sm text-gray-200 mb-3">{post.content}</p>
-
-        {/* Media */}
-        <div className="mb-3 relative w-full overflow-hidden rounded-xl aspect-[4/5] bg-black">
-          {post.media_type === "image" && (
-            <Image
-              src={post.media_url}
-              alt="post"
-              fill
-              sizes="(max-width: 768px) 100vw, 700px"
-              className="object-contain"
-            />
-          )}
-
-          {post.media_type === "video" && (
-            <video
-              src={post.media_url}
-              controls
-              className="w-full h-full object-contain"
-            />
-          )}
-        </div>
 
         {/* Counts */}
         <div className="flex items-center justify-between px-1 py-3">

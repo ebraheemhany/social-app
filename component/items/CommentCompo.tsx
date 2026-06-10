@@ -62,7 +62,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
       {/* Toggle Button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] text-gray-400"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] text-gray-400 "
       >
         <CommentIcon />
         تعليق
@@ -73,10 +73,10 @@ const CommentCompo = ({ postId }: { postId: number }) => {
 
       {/* Comments Panel */}
       <div
-        className="overflow-hidden transition-all duration-300 w-full"
+        className=" transition-all duration-300 w-full  "
         style={{ maxHeight: open ? "800px" : "0", opacity: open ? 1 : 0 }}
       >
-        <div className="px-5 pt-3 flex flex-col gap-2.5">
+        <div className="pt-3 flex flex-col gap-2.5 ">
           {isLoading && <div className="text-gray-400 text-sm">Loading...</div>}
           {error && (
             <div className="text-red-400 text-sm">Error loading comments</div>
@@ -85,7 +85,10 @@ const CommentCompo = ({ postId }: { postId: number }) => {
           {!isLoading &&
             !error &&
             comments.map((c: Comment) => (
-              <div key={c.id} className="flex items-start gap-3 group">
+              <div
+                key={c.id}
+                className="flex items-start gap-3 group  z-40 relative right-13 "
+              >
                 {/* Avatar */}
                 <div className="w-8 h-8 rounded-full bg-blue-600 shrink-0 overflow-hidden flex items-center justify-center">
                   {c.profile_image ? (
@@ -105,14 +108,14 @@ const CommentCompo = ({ postId }: { postId: number }) => {
                 </div>
 
                 {/* Content أو Edit Input */}
-                <div className="bg-gray-700 rounded-xl px-3 py-2 flex-1">
+                <div className="bg-gray-700 rounded-xl px-3 py-2 w-full">
                   <strong className="text-xs text-gray-100 block mb-1">
                     {c.username}
                   </strong>
 
                   {editingId === c.id ? (
                     // ── Edit Mode ──────────────────────────────────────────
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 ">
                       <textarea
                         rows={2}
                         value={editDraft}
@@ -165,7 +168,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
         </div>
 
         {/* New Comment Input */}
-        <div className="px-5 pt-3 pb-4 flex gap-2 items-end w-full">
+        <div className="px-5 pt-3 pb-4 flex gap-2 items-end w-full relative right-13">
           <textarea
             rows={1}
             value={draft}

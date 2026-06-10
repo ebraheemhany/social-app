@@ -72,7 +72,7 @@ function MessagesContent({
 
   // add message count in context
   const totalUnread = conversations.reduce(
-    (sum, conv) => sum + (conv.unread_count ?? 0),
+    (sum, conv) => sum + Number(conv.unread_count ?? 0),
     0,
   );
   useEffect(() => {

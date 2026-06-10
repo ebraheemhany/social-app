@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "Yalla Book",
     description:
       "Share posts, follow friends, and chat in real-time on Yalla Book.",
-    url: "https://your-app.vercel.app",
+    url: "https://social-app-8jsk.vercel.app",
     siteName: "Yalla Book",
     type: "website",
   },

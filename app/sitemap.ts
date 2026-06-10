@@ -3,19 +3,19 @@ import { MetadataRoute } from "next";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: "https://your-app.vercel.app",
+      url: "https://social-app-8jsk.vercel.app",
       lastModified: new Date(),
     },
     {
-      url: "https://your-app.vercel.app/explore",
+      url: "https://social-app-8jsk.vercel.app/explore",
       lastModified: new Date(),
     },
     {
-      url: "https://your-app.vercel.app/sign-in",
+      url: "https://social-app-8jsk.vercel.app/sign-in",
       lastModified: new Date(),
     },
     {
-      url: "https://your-app.vercel.app/sign-up",
+      url: "https://social-app-8jsk.vercel.app/sign-up",
       lastModified: new Date(),
     },
   ];
