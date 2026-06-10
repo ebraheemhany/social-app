@@ -53,7 +53,7 @@ const ShowSomeUsers = () => {
         settings: { slidesToShow: 2, slidesToScroll: 1 },
       },
       {
-        breakpoint: 480,
+        breakpoint: 250,
         settings: { slidesToShow: 2, slidesToScroll: 1 },
       },
     ],
