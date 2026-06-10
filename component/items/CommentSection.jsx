@@ -2,8 +2,10 @@
 import Image from "next/image";
 import LikesCompo from "./LikesCompo";
 import CommentCompo from "./CommentCompo";
-import { useGetCurrentUser } from "@/Query/useGetUserByid";
 import { Post } from "@/Query/useGetAllPosts";
+import Link from "next/link";
+import { useToggleSavePost } from "@/Query/useSavedPosts";
+import { Bookmark } from "lucide-react";
 
 const reactions = ["❤️", "😮", "😂"];
 
@@ -12,46 +14,45 @@ export default function CommentSection({ post }) {
     return null;
   }
 
+  const { mutate: toggleSave, isPending: isSaving } = useToggleSavePost();
+
   const likesCount = post.likes_count ?? 0;
   const commentsCount = post.comments_count ?? 0;
-
-  // const { data } = useGetCurrentUser();
-  // const currentUser = data?.profile ?? null; // ✅ استخرج الـ profile
 
   const getInitials = (username) => username?.charAt(0).toUpperCase() ?? "?";
 
   return (
-    <div className="w-[97%] mx-auto rounded-2xl bg-[#1E1E22] border border-gray-500 overflow-hidden  my-4">
+    <div className="w-[97%] mx-auto rounded-2xl bg-[#1E1E22] border border-gray-500 overflow-hidden my-4">
       <div className="px-5 pt-4 pb-3">
         {/* Header */}
-        <div className="flex items-center gap-2.5 mb-3">
-          {post.profile_image ? (
-            <div className="relative w-10 h-10 shrink-0">
-              <Image
-                src={post.profile_image}
-                alt="avatar"
-                fill
-                className="rounded-full object-cover"
-              />
+        <Link href={`/OuherProfile/${post.user_id}`}>
+          <div className="flex items-center gap-2.5 mb-3">
+            {post.profile_image ? (
+              <div className="relative w-10 h-10 shrink-0">
+                <Image
+                  src={post.profile_image}
+                  alt="avatar"
+                  fill
+                  className="rounded-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-medium shrink-0">
+                {getInitials(post.username)}
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-white">{post.username}</p>
+              <span className="text-xs text-gray-400">
+                {new Date(post.created_at).toLocaleDateString()}
+              </span>
             </div>
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-medium shrink-0">
-              {getInitials(post.username)}
-            </div>
-          )}
-          <div>
-            <p className="text-sm font-medium text-white">{post.username}</p>
-            <span className="text-xs text-gray-400">
-              {new Date(post.created_at).toLocaleDateString()}
-            </span>
           </div>
-        </div>
+        </Link>
 
         {post.media_url ? (
           <>
             <p className="text-sm text-gray-200 mb-3">{post.content}</p>
-
-            {/* Media */}
             <div className="mb-3 relative w-full overflow-hidden rounded-xl aspect-[4/5] bg-black">
               {post.media_type === "image" && (
                 <Image
@@ -62,7 +63,6 @@ export default function CommentSection({ post }) {
                   className="object-contain"
                 />
               )}
-
               {post.media_type === "video" && (
                 <video
                   src={post.media_url}
@@ -75,8 +75,6 @@ export default function CommentSection({ post }) {
         ) : (
           <p className="text-sm text-gray-200 mb-3">{post.content}</p>
         )}
-
-        {/* Content */}
 
         {/* Counts */}
         <div className="flex items-center justify-between px-1 py-3">
@@ -103,7 +101,17 @@ export default function CommentSection({ post }) {
             isLiked={post.is_liked}
             likesCount={post.likes_count}
           />
-          <CommentCompo postId={post.id} /> {/* ✅ مش محتاج currentUser */}
+          <CommentCompo postId={post.id} />
+
+          {/* ✅ Save Button */}
+          <button
+            onClick={() => toggleSave(post.id)}
+            disabled={isSaving}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-[#2a2a2e] transition disabled:opacity-50 ml-auto"
+          >
+            <Bookmark className="w-4 h-4" />
+            <span className="text-xs">Save</span>
+          </button>
         </div>
       </div>
     </div>

@@ -8,10 +8,11 @@ import Image from "next/image";
 import { useGetUserPosts } from "@/Query/useGetUserByid";
 import { useGetFollowStats } from "@/Query/useFollow";
 import { useUser } from "@/context/UserContext";
-import { UserPen, Trash2, Pencil, Eye } from "lucide-react";
+import { UserPen, Trash2, Pencil, Eye, Bookmark } from "lucide-react";
 import { useDeletePostByID } from "@/Query/useDeletePostByID";
 import { toast } from "sonner";
 import { EditPostModal } from "@/component/items/EditPostModal";
+import { useGetSavedPosts, useToggleSavePost } from "@/Query/useSavedPosts";
 
 type Post = {
   id: string;
@@ -39,6 +40,8 @@ export default function ProfilePage() {
 
   const { user } = useUser();
   const { mutate: deletePost, isPending } = useDeletePostByID();
+  const { data: savedPosts = [], isLoading: savedLoading } = useGetSavedPosts();
+  const { mutate: toggleSave } = useToggleSavePost();
 
   const { data: userPosts = [], isLoading: postsLoading } = useGetUserPosts(
     user?.id ?? "",
@@ -151,72 +154,144 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {postsLoading ? (
-              <PostsSkeleton />
-            ) : (
-              <div className="grid grid-cols-3 gap-2 mt-2">
-                {userPosts.length === 0 ? (
-                  <div className="col-span-3 text-center text-gray-500 py-10">
-                    No posts yet
-                  </div>
+            {/* Posts Tab */}
+            {activeTab === "posts" && (
+              <>
+                {postsLoading ? (
+                  <PostsSkeleton />
                 ) : (
-                  userPosts.map((post: Post) => (
-                    <div
-                      key={post.id}
-                      className="aspect-square bg-gray-800 overflow-hidden relative group cursor-pointer"
-                    >
-                      {post.media_type === "image" ? (
-                        <Image
-                          src={post.media_url!}
-                          alt="post"
-                          fill
-                          className="object-cover group-hover:scale-105 transition duration-300"
-                        />
-                      ) : post.media_type === "video" ? (
-                        <video
-                          src={post.media_url!}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center p-2 group-hover:bg-gray-700 transition">
-                          <p className="text-gray-300 text-xs text-center line-clamp-4">
-                            {post.content}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-end justify-center gap-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPost(post);
-                          }}
-                          className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition mr-1 cursor-pointer"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingPost(post);
-                          }}
-                          className="bg-blue-800 hover:bg-blue-950 text-gray-400 p-2 rounded-full transition mr-1 cursor-pointer"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPostToDelete(post.id);
-                          }}
-                          className="bg-red-800 hover:bg-red-950 text-gray-400 p-2 rounded-full transition mr-1 cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {userPosts.length === 0 ? (
+                      <div className="col-span-3 text-center text-gray-500 py-10">
+                        No posts yet
                       </div>
-                    </div>
-                  ))
+                    ) : (
+                      userPosts.map((post: Post) => (
+                        <div
+                          key={post.id}
+                          className="aspect-square bg-gray-800 overflow-hidden relative group cursor-pointer"
+                        >
+                          {post.media_type === "image" ? (
+                            <Image
+                              src={post.media_url!}
+                              alt="post"
+                              fill
+                              className="object-cover group-hover:scale-105 transition duration-300"
+                            />
+                          ) : post.media_type === "video" ? (
+                            <video
+                              src={post.media_url!}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center p-2 group-hover:bg-gray-700 transition">
+                              <p className="text-gray-300 text-xs text-center line-clamp-4">
+                                {post.content}
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-end justify-center gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPost(post);
+                              }}
+                              className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition mr-1 cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingPost(post);
+                              }}
+                              className="bg-blue-800 hover:bg-blue-950 text-gray-400 p-2 rounded-full transition mr-1 cursor-pointer"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPostToDelete(post.id);
+                              }}
+                              className="bg-red-800 hover:bg-red-950 text-gray-400 p-2 rounded-full transition mr-1 cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 )}
+              </>
+            )}
+
+            {/* Bookmark Tab */}
+            {activeTab === "bookmark" && (
+              <>
+                {savedLoading ? (
+                  <PostsSkeleton />
+                ) : (
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {savedPosts.length === 0 ? (
+                      <div className="col-span-3 text-center text-gray-500 py-10">
+                        No saved posts yet
+                      </div>
+                    ) : (
+                      savedPosts.map((post) => (
+                        <div
+                          key={post.id}
+                          className="aspect-square bg-gray-800 overflow-hidden relative group cursor-pointer"
+                        >
+                          {post.media_type === "image" ? (
+                            <Image
+                              src={post.media_url!}
+                              alt="post"
+                              fill
+                              className="object-cover group-hover:scale-105 transition duration-300"
+                            />
+                          ) : post.media_type === "video" ? (
+                            <video
+                              src={post.media_url!}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center p-2 group-hover:bg-gray-700 transition">
+                              <p className="text-gray-300 text-xs text-center line-clamp-4">
+                                {post.content}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* ✅ زرار Remove من الـ saved */}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-end justify-center gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSave(post.id, {
+                                  onSuccess: () =>
+                                    toast.success("Removed from saved"),
+                                });
+                              }}
+                              className="bg-yellow-600 hover:bg-yellow-700 text-white p-2 rounded-full transition mr-1 cursor-pointer"
+                            >
+                              <Bookmark className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Tag Tab */}
+            {activeTab === "tag" && (
+              <div className="col-span-3 text-center text-gray-500 py-10">
+                No tagged posts yet
               </div>
             )}
           </div>

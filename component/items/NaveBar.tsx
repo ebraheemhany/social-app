@@ -1,14 +1,15 @@
 "use client";
 
+import { useUser } from "@/context/UserContext";
 import { Home, Search, Bell, MessageSquareMore } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function BottomNav() {
   const pathname = usePathname();
-
+  const { notificationCount, messageCount } = useUser();
   const isActive = (path: string) => pathname === path;
-
+  console.log(notificationCount);
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0f1117] border-t border-gray-800 px-6 py-3">
       <div className="flex items-center justify-between max-w-md mx-auto">
@@ -74,8 +75,8 @@ export default function BottomNav() {
             </div>
 
             {/* Notification Dot */}
-            {isActive("/Notifications") && (
-              <span className="absolute top-5 right-0 w-2 h-2 bg-orange-600 rounded-full border border-[#0f1117]"></span>
+            {notificationCount > 0 && (
+              <span className="absolute top-0 right-0 w-2 h-2 bg-blue-700 rounded-full border border-[#0f1117]"></span>
             )}
 
             <span
@@ -90,7 +91,7 @@ export default function BottomNav() {
 
         {/* Chat */}
         <Link href="/Messages">
-          <div className="flex flex-col items-center gap-1 cursor-pointer">
+          <div className="flex flex-col items-center gap-1 cursor-pointer relative">
             <div
               className={`p-1.5 rounded-lg ${
                 isActive("/Messages")
@@ -103,6 +104,9 @@ export default function BottomNav() {
                 fill={isActive("/Messages") ? "currentColor" : "none"}
               />
             </div>
+            {messageCount > 0 && (
+              <span className="absolute top-0 right-0 w-2 h-2 bg-blue-700 rounded-full border border-[#0f1117]"></span>
+            )}
             <span
               className={`text-xs font-medium ${
                 isActive("/Messages") ? "text-[#6366f1]" : "text-gray-500"

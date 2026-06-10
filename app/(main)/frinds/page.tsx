@@ -1,54 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import LeftSection from "@/component/leftSection/leftSection";
 import RighteSection from "@/component/righteSection/righteSection";
-// import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-
+import { useGetFriends } from "@/Query/useGetFriends";
+import { useGetOrCreateConversation } from "@/Query/useChat";
 
 const tabs = [
-  { key: "friends", label: "جميع الأصدقاء" },
-  { key: "requests", label: "الطلبات" },
-  { key: "suggestions", label: "الاقتراحات" },
+  { key: "friends", label: "All Friends" },
+  { key: "requests", label: "Requests" },
+  { key: "suggestions", label: "Suggestions" },
 ];
 
 export default function FriendsPage() {
   const [tab, setTab] = useState("friends");
-  // const [session, setSession] = useState<any>(null);
-
-  // const [friends, setFriends] = useState<any[]>([]);
   const router = useRouter();
 
-  // ─────────────── get session ───────────────
-  // useEffect(() => {
-  //   const getSession = async () => {
-  //     const { data } = await supabase.auth.getSession();
-  //     setSession(data.session);
-  //   };
+  const { data: friends = [], isLoading } = useGetFriends();
+  const { mutate: getOrCreateConv, isPending: isLoadingMessage } =
+    useGetOrCreateConversation();
 
-  //   getSession();
-  // }, []);
-
-  // ─────────────── get real friends from DB ───────────────
-  // useEffect(() => {
-  //   const fetchFriends = async () => {
-  //     if (!session?.user?.id) return;
-
-  //     const { data, error } = await supabase
-  //       .from("profiles")
-  //       .select("id, username, avatar_url");
-
-  //     if (!error) {
-  //       setFriends(data || []);
-  //     }
-  //   };
-
-  //   fetchFriends();
-  // }, [session]);
-
-  // if (!session) return null;
+  const handleMessage = (friendId: number) => {
+    getOrCreateConv(friendId, {
+      onSuccess: (conv) => {
+        router.push(`/Messages?conv=${conv.id}`);
+      },
+    });
+  };
 
   return (
     <div className="w-full flex justify-center">
@@ -67,17 +47,14 @@ export default function FriendsPage() {
               {/* Header */}
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold">الأصدقاء</h1>
+                  <h1 className="text-2xl font-bold">Friends</h1>
                   <p className="text-gray-400 text-sm">
-                    إدارة أصدقائك وطلبات الصداقة
+                    Manage your friends and requests
                   </p>
                 </div>
-
-                {/* <div className="flex gap-2 text-sm text-gray-400">
-                  <span className="bg-[#1b1b1f] px-3 py-2 rounded-full">
-                    {friends.length} صديق
-                  </span>
-                </div> */}
+                <span className="bg-[#1b1b1f] px-3 py-2 rounded-full text-sm text-gray-400 self-start">
+                  {friends.length} Friends
+                </span>
               </div>
 
               {/* Tabs */}
@@ -98,58 +75,81 @@ export default function FriendsPage() {
               </div>
 
               {/* Friends */}
-              {/* {tab === "friends" && (
+              {tab === "friends" && (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
-                  {friends.map((friend) => (
-                    <div
-                      key={friend.id}
-                      className="bg-[#161618] p-4 rounded-xl flex flex-col items-center"
-                    >
-                      <Image
-                        src={friend.avatar_url || "/avatar.png"}
-                        alt="avatar"
-                        width={80}
-                        height={80}
-                        className="rounded-full"
+                  {isLoading ? (
+                    [...Array(6)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-32 bg-[#1a1a1b] rounded-xl animate-pulse"
                       />
+                    ))
+                  ) : friends.length === 0 ? (
+                    <p className="text-gray-400 col-span-3 text-center py-10">
+                      No friends yet
+                    </p>
+                  ) : (
+                    friends.map((friend) => (
+                      <div
+                        key={friend.id}
+                        className="bg-[#161618] p-4 rounded-xl flex flex-col items-center"
+                      >
+                        {friend.profile_image ? (
+                          <Image
+                            src={friend.profile_image}
+                            alt={friend.username}
+                            width={80}
+                            height={80}
+                            className="rounded-full object-cover w-20 h-20"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 rounded-full bg-blue-700 flex items-center justify-center text-2xl font-bold">
+                            {friend.username?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
 
-                      <h3 className="font-semibold mt-2">{friend.username}</h3>
+                        <h3 className="font-semibold mt-2">
+                          {friend.username}
+                        </h3>
+                        <p className="text-gray-500 text-xs text-center mt-1 line-clamp-2">
+                          {friend.bio || "No bio"}
+                        </p>
 
-                      <div className="flex gap-2 mt-3">
-                        <button className="bg-red-600 px-3 py-1 rounded-lg text-sm cursor-pointer">
-                          delete
-                        </button>
-
-                        <button
-                          disabled={!session?.user?.id}
-                          onClick={async () => {
-                            if (!session?.user?.id) return;
-
-                            const convId = await getOrCreateConversation(
-                              session.user.id,
-                              friend.id,
-                            );
-
-                            router.push(`/Messages?conv=${convId}`);
-                          }}
-                          className="bg-blue-600 px-3 py-1 rounded-lg text-sm cursor-pointer"
-                        >
-                          chat
-                        </button>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() =>
+                              router.push(`/OuherProfile/${friend.id}`)
+                            }
+                            className="bg-[#1a1a1b] border border-gray-700 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-gray-700 transition"
+                          >
+                            Profile
+                          </button>
+                          <button
+                            onClick={() => handleMessage(friend.id)}
+                            disabled={isLoadingMessage}
+                            className="bg-blue-600 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-blue-700 transition disabled:opacity-50"
+                          >
+                            Message
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
-              )} */}
+              )}
 
               {/* Requests */}
               {tab === "requests" && (
-                <p className="text-gray-400 mt-5">No requests yet</p>
+                <p className="text-gray-400 mt-5 text-center">
+                  No requests yet
+                </p>
               )}
 
               {/* Suggestions */}
               {tab === "suggestions" && (
-                <p className="text-gray-400 mt-5">No suggestions yet</p>
+                <p className="text-gray-400 mt-5 text-center">
+                  No suggestions yet
+                </p>
               )}
             </div>
           </div>

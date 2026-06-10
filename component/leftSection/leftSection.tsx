@@ -123,10 +123,15 @@ const LeftSection = () => {
                 </div>
               </li>
             </Link>
-            <li className="flex items-center gap-2 py-2 px-2 cursor-pointer">
-              <Bookmark className="w-5 h-5" />
-              <p>Saved</p>
-            </li>
+            <Link href="/saved">
+              <li
+                className={`flex items-center gap-2 py-2 px-2 rounded-lg cursor-pointer transition
+    ${isActive("/saved") ? "bg-gray-700 text-white" : "text-gray-500 hover:bg-gray-700 hover:text-white"}`}
+              >
+                <Bookmark className="w-5 h-5" />
+                <p>Saved</p>
+              </li>
+            </Link>
           </ul>
         </div>{" "}
         <div className="w-[90%] h-px mx-auto bg-gray-700 mt-2"></div>

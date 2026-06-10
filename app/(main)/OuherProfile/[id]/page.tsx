@@ -22,7 +22,7 @@ export default function UserProfilePage() {
   // ─── Data ──────────────────────────────────────────────────────────────────
   const { data: profileData, isLoading: profileLoading } =
     useGetCurrentUser(userId);
-  const profile = profileData?.profile ?? null;
+  const profile = profileData ?? null;
 
   const { data: userPosts = [], isLoading: postsLoading } =
     useGetUserPosts(userId);

@@ -29,7 +29,7 @@ function MessagesContent({
     !!searchParams.get("conv"),
   );
   const bottomRef = useRef<HTMLDivElement>(null);
-  const { setMessageCount, user } = useUser();
+  const { user } = useUser();
 
   const currentUserId = user?.id ? Number(user.id) : null;
 
@@ -70,14 +70,7 @@ function MessagesContent({
     c.other_username?.toLowerCase().includes(search.toLowerCase()),
   );
 
-  // add message count in context
-  const totalUnread = conversations.reduce(
-    (sum, conv) => sum + Number(conv.unread_count ?? 0),
-    0,
-  );
-  useEffect(() => {
-    setMessageCount(totalUnread);
-  }, [totalUnread]);
+
 
   // ✅ Message status icon
   const MessageStatus = ({

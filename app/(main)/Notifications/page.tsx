@@ -41,18 +41,18 @@ const getMessage = (type: string, username: string) => {
 export default function NotificationsPage() {
   const [tab, setTab] = useState("all");
   const router = useRouter();
-  const { user, setNotificationCount } = useUser();
+  const { user, notificationCount } = useUser();
 
   const { data, isLoading } = useNotifications();
   const { mutate: markAllAsRead } = useMarkAllAsRead();
   const { mutate: removeNotification } = useDeleteNotification();
 
   const notifications = data?.notifications ?? [];
-  const unreadCount = data?.unread ?? 0;
-  // add notification count in context
-  useEffect(() => {
-    setNotificationCount(unreadCount);
-  }, [unreadCount]);
+  // const unreadCount = data?.unread ?? 0;
+  // // add notification count in context
+  // useEffect(() => {
+  //   setNotificationCount(unreadCount);
+  // }, [unreadCount]);
 
   if (!user) {
     return (
@@ -100,9 +100,9 @@ export default function NotificationsPage() {
                   <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                       Notifications
-                      {unreadCount > 0 && (
+                      {notificationCount > 0 && (
                         <span className="bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
-                          {unreadCount}
+                          {notificationCount}
                         </span>
                       )}
                     </h1>
@@ -118,7 +118,7 @@ export default function NotificationsPage() {
                     <span className="bg-[#1b1b1f] px-3 py-2 rounded-full capitalize">
                       {tabs.find((item) => item.key === tab)?.label}
                     </span>
-                    {unreadCount > 0 && (
+                    {notificationCount > 0 && (
                       <button
                         onClick={() => markAllAsRead()}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-full transition"
