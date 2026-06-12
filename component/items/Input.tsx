@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import {
   FieldError,
   UseFormRegister,
   FieldValues,
   Path,
 } from "react-hook-form";
+import { Eye, EyeOff } from "lucide-react";
 
 type InputProps<T extends FieldValues> = {
   name: Path<T>;
@@ -24,6 +26,11 @@ const Input = <T extends FieldValues>({
   register,
   error,
 }: InputProps<T>) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isPassword = type === "password";
+  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+
   return (
     <div>
       <div
@@ -32,11 +39,20 @@ const Input = <T extends FieldValues>({
       >
         {icon}
         <input
-          type={type}
+          type={inputType}
           {...register(name)}
           className="w-full outline-none bg-transparent"
           placeholder={placeholder}
         />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="text-[#9490b8] hover:text-[#6d28d9] transition cursor-pointer"
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
       </div>
       {error && (
         <p className="text-red-400 text-[11px] ml-3">{error.message}</p>
