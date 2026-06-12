@@ -10,15 +10,11 @@ export const signUpSchema = z
 
     password: z
       .string()
-      .min(8, { message: "Password must be at least 8 characters" })
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).+$/, {
-        message:
-          "Password must include uppercase, lowercase, number, and special character",
-      }),
+      .min(6, { message: "Password must be at least 6 characters" }),
 
     restpassword: z
       .string()
-      .min(8, { message: "Confirm password is required" }),
+      .min(6, { message: "Confirm password is required" }),
   })
   .refine((data) => data.password === data.restpassword, {
     message: "Passwords do not match",
@@ -29,6 +25,21 @@ export const signInSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(1, { message: "Password is required" }),
 });
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(6, { message: "Password must be at least 6 characters" }),
+
+    confirmPassword: z
+      .string()
+      .min(6, { message: "Confirm password is required" }),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 export type SignUpData = z.infer<typeof signUpSchema>;
 export type SignInData = z.infer<typeof signInSchema>;
