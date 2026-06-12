@@ -9,11 +9,12 @@ import { useLogin } from "@/Query/useAuth";
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
+
 const SignInForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const { mutate, isPending } = useLogin();
+
   const {
     register,
     handleSubmit,
@@ -23,33 +24,37 @@ const SignInForm = () => {
   });
 
   const onSubmit = (data: SignInData) => {
-    mutate({
-      email: data.email,
-      password: data.password,
-    });
+    mutate({ email: data.email, password: data.password });
   };
 
   useEffect(() => {
     const token = searchParams.get("token");
+    const refreshToken = searchParams.get("refreshToken");
 
     if (token) {
-      // احفظ الـ token
       Cookies.set("accessToken", token, {
-        expires: 1 / 96, // 15 دقيقة
+        expires: 1 / 96,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
       });
 
-      // نضف الـ URL
-      window.history.replaceState({}, "", "/sign-in");
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
 
-      // روح للصفحة الرئيسية
+      Cookies.set("isLoggedIn", "true", {
+        expires: 7,
+        secure: false,
+        sameSite: "lax",
+        path: "/",
+      });
+
+      window.history.replaceState({}, "", "/sign-in");
       router.push("/");
     }
   }, []);
 
-  // googe login
   const handleGoogleLogin = () => {
     window.location.href =
       "https://back-app-production-e21a.up.railway.app/api/auth/google";
@@ -58,7 +63,6 @@ const SignInForm = () => {
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* email */}
         <Input
           name="email"
           type="email"
@@ -67,8 +71,6 @@ const SignInForm = () => {
           register={register}
           error={errors.email}
         />
-
-        {/* password */}
         <Input
           name="password"
           type="password"
@@ -77,28 +79,27 @@ const SignInForm = () => {
           register={register}
           error={errors.password}
         />
-
         <div className="flex items-center justify-center">
           <button
             type="submit"
-            className="bg-blue-800 text-white py-2  rounded-xl w-full cursor-pointer  "
+            className="bg-blue-800 text-white py-2 rounded-xl w-full cursor-pointer"
             disabled={isPending}
           >
             Sign In
           </button>
         </div>
       </form>
+
       <button
         onClick={handleGoogleLogin}
-        className="w-full mt-4  active:scale-[0.98] hover:underline
-            text-white font-bold cursor-pointer text-base"
+        className="w-full mt-4 active:scale-[0.98] hover:underline text-white font-bold cursor-pointer text-base"
       >
         Continue with Google
       </button>
 
       <Link
         href="/forget-password"
-        className="text-blue-500 text-[12px] hover:underline w-full block text-center  "
+        className="text-blue-500 text-[12px] hover:underline w-full block text-center"
       >
         Forgot Password?
       </Link>
