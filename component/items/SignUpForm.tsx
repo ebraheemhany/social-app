@@ -53,7 +53,7 @@ const SignUpForm = () => {
   // googe login
   const handleGoogleLogin = () => {
     window.location.href =
-      "https://back-app-production-e21a.up.railway.app/api/auth/google";
+      "https://back-app-production-5999.up.railway.app/api/auth/google";
   };
 
   return (

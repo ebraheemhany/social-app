@@ -19,7 +19,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com blob:; connect-src 'self' https://back-app-production-e21a.up.railway.app wss://back-app-production-e21a.up.railway.app;",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com blob:; connect-src 'self' https://back-app-production-5999.up.railway.app wss://back-app-production-5999.up.railway.app;",
           },
           {
             key: "X-Content-Type-Options",
