@@ -58,7 +58,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
   };
 
   return (
-    <div className="relative w-full min-w-0">
+    <div className="contents">
       {/* Toggle Button */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -73,7 +73,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
 
       {/* Comments Panel */}
       <div
-        className="w-full transition-all duration-300"
+        className="order-3 w-full basis-full transition-all duration-300"
         style={{ maxHeight: open ? "800px" : "0", opacity: open ? 1 : 0 }}
       >
         <div className="pt-3 flex flex-col gap-2.5 ">
@@ -148,7 +148,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
 
                 {/* Actions — بس لو صاحب التعليق */}
                 {Number(user?.id) === c.user_id && editingId !== c.id && (
-                  <div className="mt-3 flex flex-col gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+                  <div className="order-2 mt-0.5 flex flex-col gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
                     <button
                       onClick={() => startEdit(c)}
                       aria-label="Edit comment"

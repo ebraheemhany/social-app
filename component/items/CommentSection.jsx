@@ -94,21 +94,19 @@ export default function CommentSection({ post }) {
         <div className="border-t border-gray-700 -mx-5" />
 
         {/* Actions */}
-        <div className="flex min-w-0 items-start gap-1 pt-2">
+        <div className="flex min-w-0 flex-wrap items-start gap-1 pt-2">
           <LikesCompo
             postId={post.id}
             isLiked={post.is_liked}
             likesCount={post.likes_count}
           />
-          <div className="min-w-0 flex-1">
-            <CommentCompo postId={post.id} />
-          </div>
+          <CommentCompo postId={post.id} />
 
           {/* ✅ Save Button */}
           <button
             onClick={() => toggleSave(post.id)}
             disabled={isSaving}
-            className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-gray-400 transition hover:bg-[#2a2a2e] hover:text-yellow-400 disabled:opacity-50 sm:px-3"
+            className="order-2 ml-auto flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-gray-400 transition hover:bg-[#2a2a2e] hover:text-yellow-400 disabled:opacity-50 sm:px-3"
           >
             <Bookmark className="h-5 w-5" />
             <span className="hidden text-xs sm:inline">Save</span>
