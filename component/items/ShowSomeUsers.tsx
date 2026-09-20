@@ -16,7 +16,7 @@ const FollowButton = ({ userId }: { userId: number }) => {
     <button
       onClick={() => toggleFollow()}
       disabled={isPending || isLoading}
-      className={`mt-2 px-4 py-1 rounded-full text-xs transition disabled:opacity-50 ${
+      className={`mt-2 w-full max-w-[108px] px-2 py-1 rounded-full text-[11px] whitespace-nowrap transition disabled:opacity-50 ${
         followData?.isFollowing
           ? "border border-gray-600 text-gray-400"
           : "bg-purple-600 text-white hover:bg-purple-700"
@@ -54,7 +54,7 @@ const ShowSomeUsers = () => {
       },
       {
         breakpoint: 150,
-        settings: { slidesToShow: 2, slidesToScroll: 1 },
+        settings: { slidesToShow: 1, slidesToScroll: 1 },
       },
     ],
   };
@@ -70,8 +70,8 @@ const ShowSomeUsers = () => {
       <div className="mb-6">
         <Slider {...settings}>
           {users.map((user) => (
-            <div key={user.id} className="p-2">
-              <div className="bg-[#1E1E22] border border-gray-700 rounded-xl p-3 flex flex-col items-center">
+            <div key={user.id} className="min-w-0 p-2">
+              <div className="w-full min-w-0 min-h-[148px] bg-[#1E1E22] border border-gray-700 rounded-xl p-3 flex flex-col items-center justify-between">
                 <Link href={`/OuherProfile/${user.id}`}>
                   <div className="w-12 h-12 relative mb-2">
                     {user.profile_image ? ( // ✅ profile_image بدل avatar_url
@@ -91,7 +91,7 @@ const ShowSomeUsers = () => {
                   </div>
                 </Link>
 
-                <p className="text-white text-sm truncate max-w-[80px] text-center">
+                <p className="w-full px-1 text-white text-sm truncate text-center">
                   {user.username}
                 </p>
 

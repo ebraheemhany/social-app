@@ -2,7 +2,6 @@
 import Image from "next/image";
 import LikesCompo from "./LikesCompo";
 import CommentCompo from "./CommentCompo";
-import { Post } from "@/Query/useGetAllPosts";
 import Link from "next/link";
 import { useToggleSavePost } from "@/Query/useSavedPosts";
 import { Bookmark } from "lucide-react";
@@ -10,11 +9,11 @@ import { Bookmark } from "lucide-react";
 const reactions = ["❤️", "😮", "😂"];
 
 export default function CommentSection({ post }) {
+  const { mutate: toggleSave, isPending: isSaving } = useToggleSavePost();
+
   if (!post) {
     return null;
   }
-
-  const { mutate: toggleSave, isPending: isSaving } = useToggleSavePost();
 
   const likesCount = post.likes_count ?? 0;
   const commentsCount = post.comments_count ?? 0;
@@ -22,7 +21,7 @@ export default function CommentSection({ post }) {
   const getInitials = (username) => username?.charAt(0).toUpperCase() ?? "?";
 
   return (
-    <div className="w-[97%] mx-auto rounded-2xl bg-[#1E1E22] border border-gray-500 overflow-hidden my-4">
+    <div className="w-[97%] mx-auto mb-8 rounded-2xl bg-[#1E1E22] border border-gray-500 overflow-hidden my-4">
       <div className="px-5 pt-4 pb-3">
         {/* Header */}
         <Link href={`/OuherProfile/${post.user_id}`}>
@@ -53,7 +52,7 @@ export default function CommentSection({ post }) {
         {post.media_url ? (
           <>
             <p className="text-sm text-gray-200 mb-3">{post.content}</p>
-            <div className="mb-3 relative w-full overflow-hidden rounded-xl aspect-[4/5] bg-black">
+            <div className="mb-3 relative w-full overflow-hidden rounded-xl aspect-4/5 bg-black">
               {post.media_type === "image" && (
                 <Image
                   src={post.media_url}
@@ -95,22 +94,24 @@ export default function CommentSection({ post }) {
         <div className="border-t border-gray-700 -mx-5" />
 
         {/* Actions */}
-        <div className="flex items-start gap-1 pt-2">
+        <div className="flex min-w-0 items-start gap-1 pt-2">
           <LikesCompo
             postId={post.id}
             isLiked={post.is_liked}
             likesCount={post.likes_count}
           />
-          <CommentCompo postId={post.id} />
+          <div className="min-w-0 flex-1">
+            <CommentCompo postId={post.id} />
+          </div>
 
           {/* ✅ Save Button */}
           <button
             onClick={() => toggleSave(post.id)}
             disabled={isSaving}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-[#2a2a2e] transition disabled:opacity-50 ml-auto"
+            className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-gray-400 transition hover:bg-[#2a2a2e] hover:text-yellow-400 disabled:opacity-50 sm:px-3"
           >
-            <Bookmark className="w-4 h-4" />
-            <span className="text-xs">Save</span>
+            <Bookmark className="h-5 w-5" />
+            <span className="hidden text-xs sm:inline">Save</span>
           </button>
         </div>
       </div>

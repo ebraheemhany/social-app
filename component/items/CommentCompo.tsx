@@ -10,7 +10,7 @@ import {
   Comment,
 } from "@/Query/useComments";
 import { useUser } from "@/context/UserContext";
-import { PencilLine } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 const CommentCompo = ({ postId }: { postId: number }) => {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -58,7 +58,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
   };
 
   return (
-    <div className="w-full relative">
+    <div className="relative w-full min-w-0">
       {/* Toggle Button */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -73,7 +73,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
 
       {/* Comments Panel */}
       <div
-        className=" transition-all duration-300 w-full  "
+        className="w-full transition-all duration-300"
         style={{ maxHeight: open ? "800px" : "0", opacity: open ? 1 : 0 }}
       >
         <div className="pt-3 flex flex-col gap-2.5 ">
@@ -87,7 +87,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
             comments.map((c: Comment) => (
               <div
                 key={c.id}
-                className="flex items-start gap-3 group  z-40 relative right-13 "
+                className="group relative z-40 flex items-start gap-3"
               >
                 {/* Avatar */}
                 <div className="w-8 h-8 rounded-full bg-blue-600 shrink-0 overflow-hidden flex items-center justify-center">
@@ -108,14 +108,14 @@ const CommentCompo = ({ postId }: { postId: number }) => {
                 </div>
 
                 {/* Content أو Edit Input */}
-                <div className="bg-gray-700 rounded-xl px-3 py-2 w-full">
+                <div className="min-w-0 flex-1 rounded-xl bg-gray-700 px-3 py-2">
                   <strong className="text-xs text-gray-100 block mb-1">
                     {c.username}
                   </strong>
 
                   {editingId === c.id ? (
                     // ── Edit Mode ──────────────────────────────────────────
-                    <div className="flex flex-col gap-2 ">
+                    <div className="flex flex-col gap-2">
                       <textarea
                         rows={2}
                         value={editDraft}
@@ -148,18 +148,22 @@ const CommentCompo = ({ postId }: { postId: number }) => {
 
                 {/* Actions — بس لو صاحب التعليق */}
                 {Number(user?.id) === c.user_id && editingId !== c.id && (
-                  <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition mt-3">
+                  <div className="mt-3 flex flex-col gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
                     <button
                       onClick={() => startEdit(c)}
-                      className="text-gray-400 hover:text-blue-400 text-xs cursor-pointer"
+                      aria-label="Edit comment"
+                      title="Edit comment"
+                      className="cursor-pointer rounded-md bg-gray-800 p-1.5 text-gray-400 transition hover:bg-blue-500/20 hover:text-blue-400"
                     >
-                      <PencilLine size={13} />
+                      <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => deleteComment(c.id)}
-                      className="text-gray-400 hover:text-red-400 text-xs cursor-pointer "
+                      aria-label="Delete comment"
+                      title="Delete comment"
+                      className="cursor-pointer rounded-md bg-gray-800 p-1.5 text-gray-400 transition hover:bg-red-500/20 hover:text-red-400"
                     >
-                      ✕
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 )}
@@ -168,7 +172,7 @@ const CommentCompo = ({ postId }: { postId: number }) => {
         </div>
 
         {/* New Comment Input */}
-        <div className="px-5 pt-3 pb-4 flex gap-2 items-end w-full relative right-13">
+        <div className="flex w-full items-end gap-2 px-0 pb-4 pt-3 sm:px-5">
           <textarea
             rows={1}
             value={draft}

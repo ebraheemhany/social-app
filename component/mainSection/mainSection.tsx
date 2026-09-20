@@ -49,7 +49,7 @@ const MainSection = () => {
       ) : posts?.length === 0 ? (
         <div className="text-gray-400 text-center mt-10">No posts yet</div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pb-24">
           {posts?.map((post) => (
             <CommentSection key={post.id} post={post} />
           ))}

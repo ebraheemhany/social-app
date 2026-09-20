@@ -47,7 +47,7 @@ export default function ExplorePage() {
 
   return (
     <div className="w-full flex justify-center">
-      <div className="w-[100%] md:w-[95%] lg:w-[90%] relative bg-black text-white">
+      <div className="w-full md:w-[95%] lg:w-[90%] relative bg-black text-white">
         <div className="flex gap-4">
           {/* left section */}
           <div className="hidden md:block md:w-[30%] lg:w-[20%]">
@@ -57,7 +57,7 @@ export default function ExplorePage() {
           </div>
 
           {/* main section */}
-          <div className="w-[100%] md:w-[70%] lg:w-[60%] mt-22 md:mt-10">
+          <div className="min-w-0 w-full md:w-[70%] lg:w-[60%] mt-22 md:mt-10">
             {/* 🔍 Search */}
             <div className="flex items-center gap-3 bg-[#1E1E22] border border-gray-700 rounded-xl px-4 py-2 mb-5">
               <Search className="w-4 h-4 text-gray-400" />

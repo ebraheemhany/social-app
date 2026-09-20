@@ -160,7 +160,7 @@ export default function NotificationsPage() {
 
                 {/* Notifications List */}
                 {!isLoading && (
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3 pb-24">
                     {filtered.length === 0 ? (
                       <div className="rounded-3xl border border-dashed border-gray-700 bg-[#151518] p-6 text-center text-gray-400">
                         There are no notifications in this section at the
